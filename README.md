@@ -74,7 +74,7 @@ SPA(Single Page Application)의 등장에 따라 도입된 방식으로, React�
 1. pre-rendering
 처음 웹페이지 방문 시에는 SSR 방식으로 FE 서버, BE 서버, 데이터베이스를 거쳐 html 파일과 데이터를 합쳐서 화면에 그려주고, 이후 링크 타고 이동 시에는 CSR 방식을 사용한다.
 
-> SSG(Static-Site-Generation): 빌드 타임에 HTML 문서를 각 페이지별로 생성하고 해당 페이지에 요청이 올 경우 이미 생성된 HTML 문서를 반환한다. --- 마케팅 페이지, 제품 목록, 블로그 게시물 등 요청에 따라 동일한 결과를 반환하는 경우
+> SSG(Static-Site-Generation): 빌드 타임에 HTML 문서를 각 페이지별로 생성하고 해당 페이지에 요청이 올 경우 이미 생성된 HTML 문서를 반환한다. --- 마케팅 페이지, 제품 목록, 블로그 게시물 등 요청에 따라 동일한 결과를 반환하는 경우<br>
 > SSR(Server-Side-Rendering): 유저에 페이지를 요청할 때마다 그에 맞는 HTML 문서를 생성해서 반환한다. --- 분석 차트나 게시판 같이 유저의 요청에 따라 동적으로 페이지를 생성해야 하는 경우
 
 2. pre-fetching
