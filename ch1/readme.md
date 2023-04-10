@@ -142,7 +142,7 @@ const App = ({ Component }) => {
 
 그리고 그 새로 만든 객체와 이전 객체를 비교한 결과는 항상 `false`이기 때문에 Virtual DOM는 상태가 변경되었다고 생각하게 되고, 그 결과 리렌더링이 발생하게 된다.
 
-### `styled-component`
+### `styled-components`
 
 #### 사용 전 extension 설치
 `vscode-styled-components` 확장 프로그램을 설치하면 autocomplete이 가능해진다.
@@ -184,7 +184,7 @@ const SearchInput = styled(Input.Search)`
 ```
 이렇게 괄호 안에 컴포넌트를 넣어주면 그 컴포넌트를 커스텀하게 스타일링할 수 있다.
 
-### 성능 최적화는 하고 싶은데, `styled-component`는 사용하기 싫을 때
+### 성능 최적화는 하고 싶은데, `styled-components`는 사용하기 싫을 때
 
 값을 캐싱하는 `useMemo` Hook 사용
 
@@ -303,6 +303,10 @@ export default (initialValue = null) => {
 useInput Hook을 만들었으면 이를 import해서 사용한다.
 ```javascript
 // signup.js
+...
+import AppLayout from "../components/AppLayout";
+import useInput from "../hooks/useInput";
+...
 const signup = () => {
   const [id, onChangeId] = useInput("");
   const [nickname, onChangeNickname] = useInput("");
