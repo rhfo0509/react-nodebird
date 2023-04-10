@@ -1,6 +1,8 @@
+# ch0. Hello, Next.js
+
 ## Next.js
 
-Next.js는 <b>React</b>로 만드는 <b>서버 사이트 렌더링 프레임워크</b>이다.<br>
+Next.js는 <b>React</b>로 만드는 <b>서버 사이드 렌더링 프레임워크</b>이다.<br>
 Next.js에 대해 설명하기 전, 클라이언트 사이드 렌더링(CSR)과 서버 사이드 렌더링(SSR)에 대해 알아보자.
 
 ---
@@ -8,17 +10,17 @@ Next.js에 대해 설명하기 전, 클라이언트 사이드 렌더링(CSR)과 
 ### 클라이언트 사이드 렌더링(CSR)
 
 SPA(Single Page Application)의 등장에 따라 도입된 방식으로, React나 Vue, Angular 같은 자바스크립트 프레임워크들에서 SPA 방식을 사용한다.
-> SPA는 서버로부터 매번 새로운 페이지를 가져오는 것이 아닌, 최초 한번 페이지 로드 후 필요한 부분만 ajax를 통해 데이터를 바인딩한다.
+> SPA는 서버로부터 매번 새로운 페이지를 가져오는 것이 아닌, 최초 한번 페이지 로드 후 필요한 부분의 데이터만 가져오는 방식이다.
 
 #### 작동 방식
 1.
 ![image](https://user-images.githubusercontent.com/85874042/228757520-e6d2b14c-1052-4d41-aff1-933e6260445f.png)
 
 이 때 index.html 파일은
-```
+```html
 <body>
   <div id="root"></div>
-  <script src="app.js></script>
+  <script src="app.js"></script>
 </body>
 ```
 처럼 되어있기 때문에(데이터 X) 처음 접속하게 되면 먼저 빈 화면(로딩창)을 보게 된다.
@@ -77,7 +79,7 @@ SPA(Single Page Application)의 등장에 따라 도입된 방식으로, React�
 
 처음 웹페이지 방문 시에는 SSR 방식으로 FE 서버, BE 서버, 데이터베이스를 거쳐 html 파일과 데이터를 합쳐서 화면에 그려주고, 이후 링크 타고 이동 시에는 CSR 방식을 사용한다.
 
-> SSG(Static-Site-Generation): 빌드 타임에 HTML 문서를 각 페이지별로 생성하고 해당 페이지에 요청이 올 경우 이미 생성된 HTML 문서를 반환한다. (pages 폴더에 있는 --- 마케팅 페이지, 제품 목록, 블로그 게시물 등 요청에 따라 동일한 결과를 반환하는 경우<br>
+> SSG(Static-Site-Generation): 빌드 시점에 HTML 문서를 각 페이지별로 생성하고 해당 페이지에 요청이 올 경우 이미 생성된 HTML 문서를 반환한다.  --- 마케팅 페이지, 제품 목록, 블로그 게시물 등 요청에 따라 동일한 결과를 반환하는 경우<br>
 > SSR(Server-Side-Rendering): 유저에 페이지를 요청할 때마다 그에 맞는 HTML 문서를 생성해서 반환한다. --- 분석 차트나 게시판 같이 유저의 요청에 따라 동적으로 페이지를 생성해야 하는 경우
 
 2. pre-fetching
@@ -116,6 +118,12 @@ index.js의 AppLayout 컴포넌트 내에 있는 `<div>Hello Next!</div>`를 App
 
 * `PropTypes.node`: 렌더링될 수 있는 타입인지에 대해 검사
 * `PropTypes.element`: 리액트 요소인지 검사 ex) `<div>123</div>`, `<Component />`
+
+---
+
+### components 폴더와 pages 폴더
+<b>components</b> : 여러 페이지에 공통으로 적용되는 재사용 가능한 컴포넌트인 경우 여기에 작성
+<b>pages</b> : 일반적인 페이지 컴포넌트의 경우 여기에 작성
 
 
 
