@@ -1,31 +1,25 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { Button, Form, Input } from "antd";
 import Link from "next/link";
 import styled from "styled-components";
-import PropTypes from "prop-types";
+import { useDispatch } from "react-redux";
+import useInput from "../hooks/useInput"
+
+import { loginAction } from '../reducers/user';
 
 const ButtonWrapper = styled.div`
   margin-top: 10px;
 `;
 
-const LoginForm = ({ setIsLoggedIn }) => {
-  // const style = useMemo(() => ({ marginTop: 10 }), []);
-
-  const [id, setId] = useState("");
-  // 최적화를 위해 컴포넌트에 props로 넘겨주는 함수의 경우 useCallback으로 꼭 감싸준다.
-  const onChangeId = useCallback((e) => {
-    setId(e.target.value);
-  }, []);
-
-  const [password, setPassword] = useState("");
-  const onChangePassword = useCallback((e) => {
-    setPassword(e.target.value);
-  }, []);
+const LoginForm = () => {
+  const [id, onChangeId] = useInput("");
+  const [password, onChangePassword] = useInput("");
+  const dispatch = useDispatch();
 
   const onSubmitForm = useCallback(
     () => {
       console.log(id, password);
-      setIsLoggedIn(true);
+      dispatch(loginAction({ id, password }));
     },
     [id, password]
   );
@@ -58,10 +52,6 @@ const LoginForm = ({ setIsLoggedIn }) => {
       </ButtonWrapper>
     </Form>
   );
-};
-
-LoginForm.propTypes = {
-  setIsLoggedIn: PropTypes.func.isRequired,
 };
 
 export default LoginForm;
