@@ -1,5 +1,6 @@
 import { Avatar, Button, Card } from 'antd';
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const UserProfile = ({ setIsLoggedIn }) => {
   const onLogout = () => {
@@ -14,12 +15,16 @@ const UserProfile = ({ setIsLoggedIn }) => {
       ]}
     >
       <Card.Meta 
-        avatar={<Avatar>ZC</Avatar>}
-        title="BEAR"
+        avatar={<Avatar>z</Avatar>}
+        title="zero"
       />
       <Button onClick={onLogout}>로그아웃</Button>
     </Card>
   );
+};
+
+UserProfile.propTypes = {
+  setIsLoggedIn: PropTypes.func.isRequired,
 };
 
 export default UserProfile;

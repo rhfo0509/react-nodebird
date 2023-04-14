@@ -5,7 +5,7 @@ import AppLayout from "../components/AppLayout";
 import PostForm from '../components/PostForm';
 import PostCard from '../components/PostCard';
 
-const index = () => {
+const Home = () => {
   const { isLoggedIn } = useSelector((state) => state.user);
   const mainPosts = useSelector((state) => state.post.mainPosts);
   return (
@@ -16,4 +16,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default Home;

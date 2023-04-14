@@ -5,17 +5,21 @@ import { addPost } from "../reducers/post";
 import { useState } from "react";
 
 const PostForm = () => {
-  const imagePaths = useSelector((state) => state.post.imagePaths);
+  const { imagePaths } = useSelector((state) => state.post);
   const dispatch = useDispatch();
   const imageInput = useRef();
+
+  // useInput을 사용하면서 setText("")을 적용시킬 수 있는 방법은?
   const [text, setText] = useState("");
   const onChangeText = useCallback((e) => {
     setText(e.target.value);
   }, []);
+
   const onSubmit = useCallback(() => {
     dispatch(addPost);
     setText("");
   }, []);
+
   const onClickImageUpload = useCallback(() => {
     imageInput.current.click();
   }, [imageInput.current]);
