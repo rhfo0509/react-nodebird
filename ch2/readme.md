@@ -392,7 +392,8 @@ redux의 서버 사이드 렌더링을 위해 `HYDRATE`가 필요한데, 이것�
 
 ## 더미데이터와 포스트폼 만들기
 
-* **속성**의 경우, 서버 개발자로부터 어떤 형식으로 받을 건지 사전에 협의를 하는 것이 좋다.
+* 더미데이터의 **속성**의 경우, 서버 개발자로부터 어떤 형식으로 받을 건지 사전에 협의를 하는 것이 좋다. (★)
+* 더미데이터가 있으면 백엔드가 없어도 프론트단에서 테스트하기 편하다는 장점이 있다.
 * `mainPosts`의 경우 -> 일반적으로 게시글 자체의 속성인 `id`와 `content`는 **소문자**로, 다른 정보들을 이용하는 `User`, `Images`, `Comments`는 **대문자**로 작성한다.
 
 ```js
@@ -469,7 +470,7 @@ export default reducer;
 ```
 
 * 액션 이름을 **상수**로 빼줄 경우, 다른 곳에서 재사용하기 편하며 오타를 낼 확률도 줄어든다.
-* `mainPosts: [dummyPost, ...state.mainPosts]` 처럼 앞에다 추가해야 게시글 최상단으로 올라간다.
+* `mainPosts: [dummyPost, ...state.mainPosts]` 새로 추가하는 게시글을 제일 앞에다 추가해야 게시글 최상단으로 올라간다.
 
 ### 메인화면에 포스트 넣기
 
@@ -501,14 +502,14 @@ const Home = () => {
 };
 ```
 
-* 로그인 여부에 따라 게시글 작성 폼을 보이거나, 또는 안보이도록 해야 하고, 메인페이지에 전체 게시글이 보이게 하기 위해 `useSelector`를 통해 `isLoggedIn`과 `mainPosts` state를 가져온다.
+* 로그인 여부에 따라 게시글 작성 폼을 보여줄 지 결정하는 경우, 그리고 메인페이지에 전체 게시글이 보이게 하기 위해서는 `useSelector`를 통해 저장소로부터 `isLoggedIn`과 `mainPosts` state를 가져와야 한다.
 * 반복문의 **key**는 컴포넌트의 순서가 바뀔 가능성이 있는 경우, 웬만해선 **index**을 넣지 않도록 한다.
 
 ### 이미지 업로드 버튼 클릭 시 파일 업로드창이 나오도록 하려면
 
-1. `const imageInput = useRef()`
-2. `<input type="file" multiple hidden ref={imageInput} />` -> input에 ref를 달아준다.
-3. `imageInput.current.click()`을 통해 input 클릭하면 파일 업로드창을 띄울 수 있음
+1. `const imageInput = useRef()` 선언
+2. `<input type="file" multiple hidden ref={imageInput} />` -> input 태그에 ref를 달아준다.
+3. `imageInput.current.click()`을 통해 input을 클릭하면 파일 업로드창을 띄울 수 있음
 
 ---
 
@@ -586,7 +587,7 @@ const PostCard = ({ post }) => {
 * 현재 로그인 중이고, 내 아이디와 게시글 작성자 아이디와 같을 때는 **수정 / 삭제** 버튼을, 그 외에는 **신고** 버튼을 보여준다.
 
 ### `PropTypes.shape()`
-post 내의 속성들도 타입 체크를 하기 위해 사용
+post 내의 속성들에 대해서도 타입 체크를 하기 위해 사용
 
 ```js
 PostCard.propTypes = {
@@ -601,17 +602,374 @@ PostCard.propTypes = {
 };
 ```
 > 의문점: `createdAt` 같은 경우 자동으로 생성되는 속성인지?
+>> 자문자답: `createdAt` 속성은 게시글 생성일자로, 백엔드에서 자동으로 포함해서 보내준다.
 
 ---
 
 ## 댓글 구현하기
 
 ```js
-{commentFormOpened && (
-  <div>
-    <CommentForm />
-    <List />
-  </div>
-)}
+// components/PostCard.js
+<CommentForm post={post} />
+<List 
+  header={`${post.Comments.length}개의 댓글`}
+  itemLayout="horizontal"
+  dataSource={post.Comments}
+  renderItem={(item) => (
+    <li>
+      <Comment
+        author={item.User.nickname}
+        avatar={<Avatar>{item.User.nickname[0]}</Avatar>}
+        content={item.content}
+      />
+    </li>
+  )}
+/>
+```
+`CommentForm` 컴포넌트에서 어떤 게시글에 댓글을 달건지에 대한 정보가 필요하기 때문에  props로 `post`(`post.id`를 얻기 위해서)를 넘겨준다.
+
+---
+
+## 이미지 구현하기
+
+```js
+// components/PostImages.js
+const PostImages = ({ images }) => {
+  const [showImagesZoom, setShowImagesZoom] = useState(false);
+
+  const onZoom = useCallback(() => {
+    setShowImagesZoom(true);
+  }, []);
+  if (images.length === 1) {
+    return (
+      <>
+        <img
+          role="presentation"
+          src={images[0].src}
+          alt={images[0].src}
+          onClick={onZoom}
+        />
+      </>
+    );
+  }
+  if (images.length === 2) {
+    return (
+      <>
+        <img
+          role="presentation"
+          style={{ width: '50%', display: 'inline-block' }}
+          src={images[0].src}
+          alt={images[0].src}
+          onClick={onZoom}
+        />
+        <img
+          role="presentation"
+          style={{ width: '50%', display: 'inline-block' }}
+          src={images[1].src}
+          alt={images[1].src}
+          onClick={onZoom}
+        />
+      </>
+    );
+  }
+  return (
+    <>
+      <div>
+        <img
+          role="presentation"
+          width="50%"
+          src={images[0].src}
+          alt={images[0].src}
+          onClick={onZoom}
+        />
+        <div
+          role='presentation'
+          style={{ display: 'inline-block', width: '50%', textAlign: 'center', verticalAlign: 'middle' }}
+          onClick={onZoom}
+        >
+          <PlusOutlined />
+          <br />
+          {images.length - 1}
+          개의 사진 더보기
+        </div>
+      </div>
+    </>
+  );
+};
 ```
 
+* 이미지의 `alt` 속성: src 속성값의 오류, 느린 네트워크 환경, 시각 장애인용 스크린 리더의 사용 등으로 **이미지를 볼 수 없는 경우**에 제공되는 대체 정보
+* 이미지를 클릭하면 이미지가 확대되도록 `onZoom` 메서드를 통해 구현하고, 확대 여부는 `showImagesZoom`이라는 state를 통해 관리
+* `role="presentation"`: 직접 입력해야 하는 button이나 input 태그와는 달리 img의 경우 굳이 클릭할 필요가 없기 때문에 이를 스크린 리더에게 알려주는 속성
+
+### img 태그의 `width: "50%"`가 적용이 안되는 이유
+
+> img 태그의 display는 기본적으로 `inline`이기 때문에 width, height, margin-top, margin-bottom, float 설정이 먹히지 않는다. 따라서 `inline-block`으로 변경하면 해결이 가능하다.
+
+---
+
+## `react-slick`을 통한 이미지 carousel 구현하기
+
+### carousel
+슬라이드쇼와 같은 방식으로 콘텐츠를 표시하는 UX 구성 요소
+
+`npm i react-slick`을 통해 carousel을 구현할 수 있다.
+
+### 속성
+
+* `initialSlide`: 처음에 몇 번째 이미지부터 보여줄 것인지 설정
+* `afterChange`: 현재 슬라이드 값(`currentSlide`)을 state로 넘겨주기 위해 사용, 이후 `Indicator` 컴포넌트에서 `currentSlide` 값을 사용한다.
+* `infinite`: 맨 마지막 슬라이드에서 다음으로 넘기면 맨 처음 슬라이드로 이동
+* `arrows`: 화살표 표시 여부, 없으면 손으로만 넘길 수 있음
+* `slidesToShow/slideToScroll`: 한 번에 하나씩만 보이고/넘길 수 있음
+
+```js
+// components/ImagesZoom/index.js
+const ImagesZoom = ({ images, onClose }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  return (
+    <Overlay>
+      <Header>
+        <h1>상세 이미지</h1>
+        <button onClick={onClose}>X</button>
+      </Header>
+      <SlickWrapper>
+        <Slick
+          initialSlide={0}
+          afterChange={(slide) => setCurrentSlide(slide)}
+          infinite
+          arrows={false}
+          slidesToShow={1}
+          slidesToScroll={1}
+        >
+          {images.map((v) => (
+            <ImgWrapper key={v.src}>
+              <img src={v.src} alt={v.src} />
+            </ImgWrapper>
+          ))}
+        </Slick>
+        <Indicator>
+          <div>
+            {currentSlide + 1}/{images.length}
+          </div>
+        </Indicator>
+      </SlickWrapper>
+    </Overlay>
+  );
+};
+```
+
+
+### styled-components의 자식(자손) 선택자
+
+```js
+const ImgWrapper = styled.div`
+  padding: 32px;
+  text-align: center;
+
+  & img {
+    margin: 0 auto;
+    max-height: 750px;
+  }
+`;
+```
+> `Header` 내의 `h1` 태그, `ImgWrapper` 내의 `img` 태그의 경우 따로 변수명을 짓지 않아도, `& img`와 같이 자식(자손) 선택자를 이용해서 스타일을 지정할 수 있다.
+
+---
+
+## 글로벌 스타일과 컴포넌트 폴더 구조
+
+실제로 실행해보면 slick이 제대로 적용되지 않는 것을 확인할 수 있는데,
+
+![image](https://user-images.githubusercontent.com/85874042/232356026-aeb0159d-0514-42e0-b204-1d8a3f7fd9b3.png)
+
+`slick-track`, `slick-slide` 등과 같이 slick에서 미리 정해놓은 클래스들은 이미 스타일링이 되어있는 상태이기 때문에 기본 css를 사용하게 되면 직접 커스텀한 스타일이 깨지게 된다.
+
+### createGlobalStyle
+따라서 이미 적용되어 있는 스타일을 덮어씌워야 하는데, styled-component의 `createGlobalStyle`을 통해 전역적으로 스타일을 덮어씌울 수 있다.
+
+```js
+const Global = createGlobalStyle`
+  .slick-slide {
+    display: inline-block;
+  }
+`;
+
+...
+
+const ImagesZoom = ({ images, onClose }) => {
+  return (
+    <Overlay>
+      <Global />
+      ...
+    </Overlay>
+  )
+}
+```
+위와 같이 글로벌 스타일을 해당 컴포넌트 아무곳에나 적용하면 정상적으로 slick이 작동됨을 확인할 수 있다.
+
+### 컴포넌트 폴더 구조
+
+그렇다면 왜 바로 `ImagesZoom.js`로 컴포넌트를 만들지 않고 `ImagesZoom` 폴더를 만든 후, 그 안에서 컴포넌트를 만들었을까?
+
+현재 `index.js` 파일을 분석해보자.
+
+```js
+const Overlay = styled.div`
+  position: fixed;
+  z-index: 5000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+`;
+
+const Header = styled.header`
+  height: 44px;
+  background: white;
+  position: relative;
+  padding: 0;
+  text-align: center;
+
+  & h1 {
+    margin: 0;
+    font-size: 17px;
+    color: #333;
+    line-height: 44px;
+  }
+`;
+
+const CloseBtn = styled(CloseOutlined)`
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 15px;
+  line-height: 14px;
+  cursor: pointer;
+`;
+
+const SlickWrapper = styled.div`
+  height: calc(100% - 44px);
+  background: #090909;
+`;
+
+const ImgWrapper = styled.div`
+  padding: 32px;
+  text-align: center;
+
+  & img {
+    margin: 0 auto;
+    max-height: 750px;
+  }
+`;
+
+const Indicator = styled.div`
+  text-align: center;
+
+  & > div {
+    width: 75px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 15px;
+    background: #313131;
+    display: inline-block;
+    text-align: center;
+    color: white;
+    font-size: 15px;
+  }
+`;
+
+const Global = createGlobalStyle`
+  .slick-slide {
+    display: inline-block;
+  }
+`;
+
+const ImagesZoom = ({ images, onClose }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  return (
+    <Overlay>
+      <Global />
+      <Header>
+        <h1>상세 이미지</h1>
+        <CloseBtn onClick={onClose}>X</CloseBtn>
+      </Header>
+      <SlickWrapper>
+        <Slick
+          initialSlide={0}
+          afterChange={(slide) => setCurrentSlide(slide)}
+          infinite
+          arrows={false}
+          slidesToShow={1}
+          slidesToScroll={1}
+        >
+          {images.map((v) => (
+            <ImgWrapper key={v.src}>
+              <img src={v.src} alt={v.src} />
+            </ImgWrapper>
+          ))}
+        </Slick>
+        <Indicator>
+          <div>
+            {currentSlide + 1}/{images.length}
+          </div>
+        </Indicator>
+      </SlickWrapper>
+    </Overlay>
+  );
+};
+```
+
+styled-components로 인해 코드량이 많아져서 가독성이 안좋아진 것을 확인할 수 있다.<br>
+따라서 styled-components 부분을 `ImagesZoom/styles.js`로 분리하고, 이를 `ImagesZoom/index.js`에서 import해서 불러오면 코드가 깔끔해지고, 재사용성도 더 높아지게 된다.
+
+> 컴포넌트가 커질 수록 컴포넌트를 잘게 쪼개서 분리하는 경우가 많아진다. 따라서 하나의 컴포넌트를 **폴더 형식**으로 만들어서 그 안에 `index.js`와 같이 **중요한 로직**이 들어있는 부분 vs `styles.js`와 같이 **로직과는 큰 관계가 없는** 부분으로 분리를 하는 것이 좋다.
+
+---
+
+## 게시글 해시태그 링크로 만들기
+
+해시태그를 클릭하면 해시태그와 관련된 게시물이 뜨도록 하기 위해 해시태그 부분을 링크로 만든다.
+
+특수한 기능(여기서는 해시태그 링크 처리)을 처리하기 위해 따로 컴포넌트로 빼주면 보다 더 깔끔해진다.
+
+```js
+<Card.Meta
+  avatar={<Avatar>{post.User.nickname[0]}</Avatar>}
+  title={post.User.nickname}
+  description={<PostCardContent postData={post.content} />}
+/>
+```
+
+### 정규표현식
+게시글 내용으로부터 해시태그인 부분과 해시태그가 아닌 부분을 분리하기 위해서 정규표현식을 사용한다.
+
+```js
+// component/PostCardContent.js
+const PostCardContent = ({ postData }) => {
+  return (
+    <div>
+      {postData.split(/(#[^\s#]+)/g).map((v, i) => {
+        if (v.match(/(#[^\s#]+)/)) {
+          return (
+            <Link key={i} href={`/hashtag/${v.slice(1)}`}>
+              <a>{v}</a>
+            </Link>
+          );
+        }
+        return v;
+      })}
+    </div>
+  );
+};
+```
+
+1. `String.prototype.split(regExp)`를 통해 regExp를 separator로 하여 문자열을 분리한다.
+
+**`/(#[^\s#]+)/g`**
+* `#`으로 시작하고, 그 뒤에 `\s(공백)`과 `#`을 제외한 문자가 1개 이상 오는 문자열을 "전역으로" 검색한다.
+* `postData.split(/(#[^\s#]+)/g)`처럼 separator가 괄호를 포함하고 있는 정규식인 경우, 포획된 결과도 결과 배열에 포함이 된다.
+
+2. `String.prototype.match(regExp)`을 통해 결과 배열 요소에서 해시태그가 포함된 요소만 추출하여 링크로 만든다.
+
+> 원래 key 값으로 index를 사용하는 것은 Anti-pattern이지만, 게시글 내용의 경우, 사용자의 의도(수정)가 없이는 변할 일이 없기 때문에 이 경우에는 index를 사용해도 된다.
