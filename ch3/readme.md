@@ -192,7 +192,7 @@ const configureStore = () => {
 
 ## saga 이펙트 알아보기
 
-> saga 이펙트 앞에는 꼭 `yield` 키워드를 넣어주도록 한다. 그 이유 중 하나는 테스트하기 편하다는 것에 있다.
+> saga 이펙트 앞에는 꼭 `yield` 키워드를 넣어주도록 한다. 그 이유 중 하나는 테스트하기 편하다는 점에 있다.
 
 1. **`all`**
 
@@ -299,28 +299,27 @@ export default function* rootSaga() {
 3. `watchLogIn`에서는 `take`에 의해 `LOG_IN_REQUEST` 액션이 dispatch될 때까지 기다림 (event listener 같은 역할)
 4. `LOG_IN_REQUEST` 액션이 dispatch 될때 `logIn` 함수가 실행, 이 때 액션 객체가 `logIn` 함수의 매개변수로 전달됨
 5. `logIn`에서 `logInAPI`를 실행하고, `call`에 의해 결괏값을 기다린다.
-> `call`이나 `fork`의 경우 호출 방식이 특이하다. `logInAPI(action.data)` -> `call(logInAPI, action.data)` (`call`이나 `fork`를 사용 시)
+> `call`이나 `fork`의 경우 호출 방식이 특이하다. `logInAPI(action.data)` -> `call(logInAPI, action.data)` (`call`이나 `fork` 사용 시)
 6. `logInAPI`에서 실제로 API 요청을 보내고 성공 시에는 `LOG_IN_SUCCESS`, 실패 시에는 `LOG_IN_FAILURE` 액션이 dispatch된다.
 
 ### thunk와 비교
 
 * `thunk`
 
-한 번에 dispatch를 여러 번 할 수 있게 해준다. 이게 끝. 아래와 같이 saga에서 제공하는 부가 기능 같은 경우 직접 구현을 해야 한다.
+한 번에 dispatch를 여러 번 할 수 있게 해준다. 이게 끝.<br>
+아래와 같이 saga에서 제공하는 부가 기능 같은 경우 직접 구현을 해야 한다.
 
 
 * `saga`
 
 설정한 시간 이후에 dispatch되게 하는 `delay` 기능<br>
-실수로 클릭을 두 번할 때 가장 마지막 것만 요청을 보내는 `takelatest` 기능<br>
+실수로 클릭을 두 번할 때 가장 마지막 것만 요청을 보내도록 하는 `takelatest` 기능<br>
 단기간에 엄청난 양이 dispatch되는 것을 막는 `throttle` 기능<br>
 등 thunk에 비해 다양한 기능을 제공한다.
 
-비동기 액션 creator을 직접 실행하는 `thunk`와 달리 
+---
 
---
-
-## take, take 시리즈, throttle
+## take, take 시리즈, throttle, delay
 
 ### take의 문제점
 
@@ -347,9 +346,9 @@ function* watchLogIn() {
 ```
 비동기적으로 동작, 모든 클릭에 대해 동작됨
 
-3. `takeLeading`
+3. `takeLeading`: 연달아 요청을 보내는 경우, 제일 처음의 요청만 보냄
 
-4. `takeLatest` : 여러 번 요청을 보낸 경우, 이전의 요청을 취소하고 제일 마지막 요청만 보냄 (이전의 요청이 완료된 경우는 가만히 나둠) -> **주로 사용됨**
+4. `takeLatest` : 연달아 요청을 보낸 경우, 이전의 요청을 취소하고 제일 마지막 요청만 보냄 (이전의 요청이 완료된 경우는 가만히 나둠) -> **주로 사용됨**
 > 하지만 실제로는 요청은 여러 번 보내지는 건 맞고, **응답할 때** 마지막 응답만 보내는 것이다. 따라서 서버 측에서 똑같은 데이터가 연달아 저장되었는지 검사를 해야한다.
 
 5. `throttle`
@@ -363,8 +362,32 @@ function* watchLogIn() {
 > `debounce`와 `throttle`의 차이<br>
 https://www.zerocho.com/category/JavaScript/post/59a8e9cb15ac0000182794fa
 
-서버를 구현하기 전까지 delay로 비동기적인 효과를 주도록 하자.
-더미데이터 쓸때도 비동기 흉내내기 편하겠죠?
+### delay
+
+```js
+// sagas/user.js
+function logInAPI(data) {
+  return axios.post("/api/login", data);
+}
+
+function* logIn(action) {
+  try {
+    // const result = yield call(logInAPI, action.data);
+    yield delay(1000);
+    yield put({
+      type: "LOG_IN_SUCCESS",
+      data: action.data,
+    });
+  } catch (err) {
+    yield put({
+      type: "LOG_IN_FAILURE",
+      data: err.respose.data,
+    });
+  }
+}
+```
+아직 서버를 구현하지 않은 상태이기 때문에, post 요청을 보내게 되면 에러가 발생한다.<br>
+따라서 로그인 유저는 더미데이터를 만들어서 받고, 비동기적인 효과는 `delay`를 사용하여 실제 서버로부터 유저 정보를 받아오는 것처럼 구현할 수 있다.
 
 ---
 
@@ -544,7 +567,7 @@ const reducer = (state = initialState, action) => {
   }
 };
 ```
-`action.data`는 id와 password 정보만 담겨있고, nickname은 포함되지 않기 때문에 로그인 성공 시 `me`에 닉네임 정보도 넣어준다.
+`action.data`는 id와 password 정보만 담겨있고, nickname은 포함되지 않기 때문에 로그인 성공 시 `me`에 nickname 정보도 넣어준다.
 
 2. 실제 컴포넌트에서 상태를 가져다 쓰기
 
@@ -563,9 +586,16 @@ const { isLoggingIn } = useSelector((state) => state.user);
 
 3. `SuccessAction`, `FailureAction` action creator은 더 이상 필요가 없는데, 액션을 saga에서 스스로 호출하고 있기 때문이다. `RequestAction` action creator만 남기고 나머지는 제거한다.
 
-### 실행 흐름
+### 실행 흐름(로그인 시)
 
 1. 로그인 폼을 통해 로그인을 한다.
-2. 로그인 폼 제출시 `loginRequestAction` action creator가 실행되면서 type이 `LOG_IN_REQUEST`인 action이 dispatch됨.
-3. reducer 측과 saga 측에서 이 action을 동시에 감지함 (정확한 순서는 reducer -> saga)
-4. reducer의 경우: reducer 함수에 의해 `isLoggingIn` 상태가 `true`로 바뀜
+2. 로그인 폼 제출시 `loginRequestAction` action creator가 실행되면서 type이 `LOG_IN_REQUEST`인 action이 dispatch됨
+3. reducer 측과 saga 측에서 이 **action**을 **동시에 감지함** (정확한 순서는 reducer -> saga)
+4. (reducer) `isLoggingIn` 상태가 `true`로 바뀜
+5. (saga) 1초 뒤에 `LOG_IN_SUCCESS`인 action이 dispatch됨
+6. (reducer) `isLoggingIn`이 `false`가 되면서 `me`에 데이터가 들어가게 되고 `isLoggedIn`이 `true`가 됨
+7. `AppLayout` 컴포넌트에서 `LoginForm`이 아닌 `UserProfile`을 보여줌
+
+---
+
+## 액션과 상태 정리하기
