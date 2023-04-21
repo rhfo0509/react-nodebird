@@ -598,4 +598,182 @@ const { isLoggingIn } = useSelector((state) => state.user);
 
 ---
 
-## 액션과 상태 정리하기
+## 액션과 상태 정리하기 + α
+
+* 액션명과 상태명을 같은 용어로 사용하는 것을 피한다.
+> 예를 들어 액션명을 `REQUEST`, `SUCCESS`, `FAILURE`로 정했으면, 상태명은 `loading`, `done`, `error`와 같이 다르게 설정하도록 한다.
+
+* id를 email로 변경한다.
+> MySQL의 id와 충돌될 우려가 있기 때문이다.
+
+### `setText`의 위치?
+```js
+const onSubmit = useCallback(() => {
+  dispatch(addPost(text));
+  setText("");
+}, [text]);
+```
+제출 버튼 클릭 시 포스트 게시 요청을 보내고, `setText`를 통해 폼에 있는 게시글 내용을 지워버리는 코드이다.<br>
+문제가 없어보이지만, 서버 측에서 에러가 발생해서 요청이 실패할 경우, 게시글을 처음부터 다시 작성해야 하는 문제가 발생한다.
+
+따라서,
+```js
+useEffect(() => {
+  if (addPostDone) {
+    setText("");
+  }
+}, [addPostDone]);
+
+const onSubmit = useCallback(() => {
+  dispatch(addPost(text));
+}, [text]);
+```
+이렇게 useEffect Hook을 이용해 `addPostDone`가 `true`가 되었을 때만 게시글 내용을 지우도록 한다.
+
+### `useInput`을 사용해서 `setText`가 없을 때는?
+
+```js
+// hooks/useInput.js
+import { useState, useCallback } from "react";
+
+export default (initialValue = null) => {
+  const [value, setValue] = useState(initialValue);
+  const handler = useCallback((e) => {
+    setValue(e.target.value);
+  }, []);
+  return [value, handler, setValue];
+};
+```
+`useInput`에서 `setValue`를 return하여<br>
+`const [text, onChangeText, setText] = useInput("")`로 사용하면 된다.
+
+---
+
+## 게시글, 댓글 saga 작성하기
+
+### 게시글 작성 시 문제점
+
+```js
+const dummyPost = (data) => ({
+  id: 2,
+  User: {
+    id: 1,
+    nickname: "bear",
+  },
+  content: data,
+  Images: [],
+  Comments: [],
+});
+```
+게시글을 dummyPost로 만들기 때문에 게시글 여러 개를 만드는 경우 키 값이 겹치게 되고, 글을 삭제하거나 상단에 추가하는 과정에서 키 값이 변경되기 때문에 이를 해결하기 위해 키 값을 **랜덤하게** 생성해야 한다.
+
+### `shortid`
+`npm i shortid`로 패키지 설치
+```js
+const dummyPost = (data) => ({
+  id: shortId.generate(),
+  User: {
+    id: 1,
+    nickname: "bear",
+  },
+  content: data,
+  Images: [],
+  Comments: [],
+});
+```
+`shortid.generate()`를 통해 절대로 겹치지 않는 id를 생성할 수 있다. (실무에서 id 정하기 애매한 경우에 사용하면 유용)
+
+### 댓글이 작성된 게시글 찾기
+
+saga에서 <br>
+`{ type: ADD_COMMENT_SUCCESS, data: action.data }`<br>
+가 dispatch될 때 reducer가 이를 처리하는 과정에서 댓글이 작성된 게시글을 찾아야 하는 과정이 필요하다.
+
+```js
+case ADD_COMMENT_SUCCESS:
+  // `mainPosts` 내의 `id`들 중에 `data`의 `postId`와 일치하는 게시글의 index를 찾는다.
+  const postIndex = state.mainPosts.findIndex(
+    (v) => v.id === action.data.postId
+  );
+  // 해당되는 게시글의 불변성을 지키기 위해 spread 연산자 사용
+  const post = { ...state.mainPosts[postIndex] };
+  // post.Comments도 객체이기 때문에 spread 연산자를 사용한 다음 제일 상단에 dummyComment를 넣어준다. (concat 메서드 사용X)
+  post.Comments = [dummyComment(action.data.content), ...post.Comments];
+  // 역시나 불변성을 지키기 위해 spread 연산자 사용한 후 새로 만들어진 mainPosts의 postIndex번 째 게시글에 post를 넣은 후 return할 때 mainPosts를 return하면 이전의 mainPosts와 서로 다른 것으로 인식하게 되어 변경된 mainPost 상태가 반영이 된다.
+  const mainPosts = [...state.mainPosts];
+  mainPosts[postIndex] = post;
+  return {
+    ...state,
+    mainPosts,
+    addCommentLoading: false,
+    addCommentDone: true,
+  };
+```
+이렇게 불변성을 지키는 과정에 너무나 복잡하고 가독성이 떨어지는 부분을 나중에 `immer` 라이브러리를 사용해서 개선할 수 있다.
+
+* 댓글 작성 버튼이 안 눌리는 문제 (feat. `z-index`)
+> 댓글 작성 버튼이 선택이 안되고 다른 태그가 선택이 되는 경우, 버튼의 `z-index`를 **1**로 두어 다른 태그의 위에 위치되도록 하면 해결이 가능하다.
+
+---
+
+## 게시글 삭제 saga 작성하기
+
+// 이하 질문 내용
+
+const onSubmitComment = useCallback(() => {
+    console.log(post.id, commentText);
+    dispatch({
+      type: ADD_COMMENT_REQUEST,
+      data: { content: commentText, postId: post.id, userId: id },
+    });
+  }, [commentText, id]);
+
+comment 속성이 content, postId, userId로 이루어져 있는데,
+reducer/post.js 구조를 보면
+Comments: [
+        {
+          User: { nickname: "nero" },
+          content: "우와 개정판이 나왔군요~",
+        },
+        {
+          User: { nickname: "hero" },
+          content: "얼른 사고 싶어요!",
+        },
+      ],
+
+
+이렇게 되있습니다. postId와 userId는 그럼 sequelize의 include를 이용해서
+가져오는 속성인건가요?
+
+또 useCallback의 deps로 post를 넣어줄 필요는 없나요? post를 넣지 않으면
+게시글이 바뀔 때마다 그 바뀐 게시글이 반영이 안되지 않나요?
+
+
+
+
+
+
+--
+
+what is 차이?
+Comments: [
+        {
+          User: { nickname: "nero" },
+          content: "우와 개정판이 나왔군요~",
+        },
+        {
+          User: { nickname: "hero" },
+          content: "얼른 사고 싶어요!",
+        },
+      ],
+
+const dummyComment = (data) => ({
+  id: shortId.generate(),
+  content: data,
+  User: {
+    id: 1,
+    nickname: "bear",
+  },
+});
+
+
