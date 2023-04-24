@@ -44,8 +44,6 @@ export default thunk;
 기본적으로 리덕스의 경우 **액션 객체**를 dispatch하는데,
 `redux-thunk` 미들웨어를 사용하게 되면 전달받은 액션이 함수 형태인 경우에는 그 함수에 `dispatch`와 `getState`를 넣어서 실행해준다.<br>
 
-이로 인해 액션이 몇초뒤에 실행되게 하거나, 현재 상태에 따라 아예 액션이 무시될 수 있는 작업이 가능해진다.
-
 ### `redux-thunk` 사용해보기
 
 1. `npm i redux-thunk`으로 패키지 설치
@@ -150,6 +148,7 @@ export const loginAction = (data) => {
 `loginAction` 한 번에 요청->성공, 요청->실패처럼 dispatch가 여러 번 일어나기 때문에 **비동기 요청**을 처리할 때 주로 사용된다.
 
 이 때 `getState()`의 경우 store 상태를 반환한다.
+
 ![image](https://user-images.githubusercontent.com/85874042/232696312-67a0511f-3117-43d3-8ad3-60b1c96feb75.png)
 
 ---
@@ -614,7 +613,7 @@ const onSubmit = useCallback(() => {
 }, [text]);
 ```
 제출 버튼 클릭 시 포스트 게시 요청을 보내고, `setText`를 통해 폼에 있는 게시글 내용을 지워버리는 코드이다.<br>
-문제가 없어보이지만, 서버 측에서 에러가 발생해서 요청이 실패할 경우, 게시글을 처음부터 다시 작성해야 하는 문제가 발생한다.
+문제가 없어보이지만, 서버 측에서 에러가 발생해서 요청이 실패할 경우, `setText("")` 때문에 작성한 게시글이 사라지는 문제가 발생하게 된다.
 
 따라서,
 ```js
@@ -628,7 +627,7 @@ const onSubmit = useCallback(() => {
   dispatch(addPost(text));
 }, [text]);
 ```
-이렇게 useEffect Hook을 이용해 `addPostDone`가 `true`가 되었을 때만 게시글 내용을 지우도록 한다.
+이렇게 `useEffect` Hook을 이용해 `addPostDone`가 `true`가 되었을 때만 게시글 내용을 지우도록 한다.
 
 ### `useInput`을 사용해서 `setText`가 없을 때는?
 
@@ -645,7 +644,7 @@ export default (initialValue = null) => {
 };
 ```
 `useInput`에서 `setValue`를 return하여<br>
-`const [text, onChangeText, setText] = useInput("")`로 사용하면 된다.
+`const [text, onChangeText, setText] = useInput("")`로 사용하면 `setText`를 사용할 수 있다.
 
 ---
 
@@ -681,7 +680,7 @@ const dummyPost = (data) => ({
   Comments: [],
 });
 ```
-`shortid.generate()`를 통해 절대로 겹치지 않는 id를 생성할 수 있다. (실무에서 id 정하기 애매한 경우에 사용하면 유용)
+`shortid.generate()`를 통해 겹치지 않는 id를 생성할 수 있다. (실무에서 id 정하기 애매한 경우에 사용하면 유용)
 
 ### 댓글이 작성된 게시글 찾기
 
@@ -690,16 +689,17 @@ saga에서 <br>
 가 dispatch될 때 reducer가 이를 처리하는 과정에서 댓글이 작성된 게시글을 찾아야 하는 과정이 필요하다.
 
 ```js
+// reducers/post.js
 case ADD_COMMENT_SUCCESS:
-  // `mainPosts` 내의 `id`들 중에 `data`의 `postId`와 일치하는 게시글의 index를 찾는다.
+  // mainPosts의 id가 action.data의 postId와 일치하는 게시글의 index를 찾는다.
   const postIndex = state.mainPosts.findIndex(
     (v) => v.id === action.data.postId
   );
-  // 해당되는 게시글의 불변성을 지키기 위해 spread 연산자 사용
+  // 해당되는 게시글의 불변성을 지켜준다.
   const post = { ...state.mainPosts[postIndex] };
-  // post.Comments도 객체이기 때문에 spread 연산자를 사용한 다음 제일 상단에 dummyComment를 넣어준다. (concat 메서드 사용X)
+  // post.Comments도 객체이기 때문에 불변성을 지킨 후 제일 상단에 dummyComment를 넣어준다.
   post.Comments = [dummyComment(action.data.content), ...post.Comments];
-  // 역시나 불변성을 지키기 위해 spread 연산자 사용한 후 새로 만들어진 mainPosts의 postIndex번 째 게시글에 post를 넣은 후 return할 때 mainPosts를 return하면 이전의 mainPosts와 서로 다른 것으로 인식하게 되어 변경된 mainPost 상태가 반영이 된다.
+  // 마지막으로 mainPosts 자체에도 불변성을 지킨 다음 새로 생성된 post를 mainPosts의 postIndex번 째 게시글에 넣어준 후 mainPosts 자체를 return한다.
   const mainPosts = [...state.mainPosts];
   mainPosts[postIndex] = post;
   return {
@@ -712,68 +712,239 @@ case ADD_COMMENT_SUCCESS:
 이렇게 불변성을 지키는 과정에 너무나 복잡하고 가독성이 떨어지는 부분을 나중에 `immer` 라이브러리를 사용해서 개선할 수 있다.
 
 * 댓글 작성 버튼이 안 눌리는 문제 (feat. `z-index`)
-> 댓글 작성 버튼이 선택이 안되고 다른 태그가 선택이 되는 경우, 버튼의 `z-index`를 **1**로 두어 다른 태그의 위에 위치되도록 하면 해결이 가능하다.
+> 댓글 작성 버튼이 선택이 안되고 다른 태그가 선택이 되는 경우, 버튼의 `z-index`를 **1**로 두어 버튼이 다른 태그의 위에 위치되도록 하면 된다.
 
 ---
 
 ## 게시글 삭제 saga 작성하기
 
-// 이하 질문 내용
+### 게시글 등록/삭제 시 userReducer에도 반영하려면?
 
-const onSubmitComment = useCallback(() => {
-    console.log(post.id, commentText);
-    dispatch({
-      type: ADD_COMMENT_REQUEST,
-      data: { content: commentText, postId: post.id, userId: id },
-    });
-  }, [commentText, id]);
-
-comment 속성이 content, postId, userId로 이루어져 있는데,
-reducer/post.js 구조를 보면
-Comments: [
-        {
-          User: { nickname: "nero" },
-          content: "우와 개정판이 나왔군요~",
-        },
-        {
-          User: { nickname: "hero" },
-          content: "얼른 사고 싶어요!",
-        },
-      ],
-
-
-이렇게 되있습니다. postId와 userId는 그럼 sequelize의 include를 이용해서
-가져오는 속성인건가요?
-
-또 useCallback의 deps로 post를 넣어줄 필요는 없나요? post를 넣지 않으면
-게시글이 바뀔 때마다 그 바뀐 게시글이 반영이 안되지 않나요?
-
-
-
-
-
-
---
-
-what is 차이?
-Comments: [
-        {
-          User: { nickname: "nero" },
-          content: "우와 개정판이 나왔군요~",
-        },
-        {
-          User: { nickname: "hero" },
-          content: "얼른 사고 싶어요!",
-        },
-      ],
-
-const dummyComment = (data) => ({
-  id: shortId.generate(),
-  content: data,
-  User: {
-    id: 1,
-    nickname: "bear",
-  },
+```js
+// reducers/user.js
+const dummyUser = (data) => ({
+  ...data,
+  nickname: "bear",
+  id: 1,
+  Posts: [{ id: 1 }],
+  Followings: [
+    { nickname: "zero" },
+    { nickname: "nero" },
+    { nickname: "hero" },
+  ],
+  Followers: [
+    { nickname: "zero" },
+    { nickname: "nero" },
+    { nickname: "hero" }
+  ],
 });
+```
+`dummyUser`에는 `Posts`가 존재하는데, 게시글 등록/삭제가 성공하는 경우, `Posts`에도 반영되어야 한다.
 
+그러나 게시글 등록/삭제는 `post` reducer에 있는 `ADD_POST_SUCCESS`, `REMOVE_POST_SUCCESS`에 의해 처리되는데, 실제로 변경하려는 상태는 위와 같이 `user` reducer에 존재한다.
+
+1. `user` reducer에 action을 만든다.
+
+```js
+export const ADD_POST_TO_ME = "ADD_POST_TO_ME";
+export const REMOVE_POST_OF_ME = "REMOVE_POST_OF_ME";
+```
+이렇게 게시글이 등록/삭제될 때, 이를 사용자 프로필에도 반영하도록 하는 새로운 액션을 만든다.
+
+2. action이 dispatch될 때 `me.Posts`의 상태를 변경하는 reducer를 작성한다.
+
+```js
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    ...
+    case ADD_POST_TO_ME:
+      return {
+        ...state,
+        me: {
+          ...state.me,
+          Posts: [{ id: action.data }, ...state.me.Posts],
+        },
+      };
+    case REMOVE_POST_OF_ME:
+      return {
+        ...state,
+        me: {
+          ...state.me,
+          Posts: state.me.Posts.filter((v) => v.id !== action.data),
+        },
+      };
+    default:
+      return state;
+  }
+};
+```
+
+3. postSaga의 `addPost`에서 `ADD_POST_SUCCESS` 액션과 동시에 `ADD_POST_TO_ME` 액션도 dispatch한다. (`removePost`에서도 마찬가지) -> 동시에 여러 액션을 dispatch할 수 있는 saga의 특성 이용
+
+```js
+// sagas/post.js
+function* addPost(action) {
+  try {
+    // const result = yield call(addPostAPI, action.data);
+    yield delay(1000);
+    const id = shortId.generate();
+    yield put({
+      type: ADD_POST_SUCCESS,
+      data: { id, content: action.data },
+    });
+    yield put({
+      type: ADD_POST_TO_ME,
+      data: id,
+    });
+  } catch (err) {
+    yield put({
+      type: ADD_POST_FAILURE,
+      error: err.respose.data,
+    });
+  }
+}
+
+function* removePost(action) {
+  try {
+    // const result = yield call(removePostAPI, action.data);
+    yield delay(1000);
+    yield put({
+      type: REMOVE_POST_SUCCESS,
+      data: action.data,
+    });
+    yield put({
+      type: REMOVE_POST_OF_ME,
+      data: action.data,
+    });
+  } catch (err) {
+    yield put({
+      type: REMOVE_POST_FAILURE,
+      error: err.response.data,
+    })
+  }
+}
+```
+
+이렇게 되면 게시글 작성 시 `ADD_POST_TO_ME`가 dispatch되면서 `action.data`로 `id`가 전달되고, 이를 `user` reducer에서 `me.Posts`에 넣어줌으로써 변경된 상태가 반영이 될 것이다.
+
+---
+
+## immer 도입하기
+
+### immer
+
+react에서 객체의 상태를 업데이트하기 위해서는 그 객체를 직접 수정하면 안되고 불변성을 지키면서 업데이트해야 한다.<br>
+
+데이터의 구조가 간단한 경우에는 이러한 점이 문제가 되지 않지만, 구조가 복잡해질 수록 불변성을 지키면서 상태를 변경하는 코드를 작성하기가 쉽지 않다.
+
+이런 경우 `immer` 라이브러리를 사용한다면 상태를 업데이트 할 때, <span style="color: skyblue">**불변성을 신경쓰지 않으면서**</span> 업데이트를 해주면 `immer`가 불변성 관리를 대신 해준다.
+
+* 설치
+
+`npm i immer@9`
+
+10버전 설치 시 에러가 발생하기 때문에 9버전으로 설치한다.
+
+* 기본 형태
+```js
+import produce from "immer";
+...
+const reducer = (state = initialState, action) => {
+  return produce(state, (draft) => {
+    // 여기에 상태 업데이트 코드 작성
+  })
+}
+```
+state 대신 draft를 통해 상태를 변경할 수 있다.
+
+`{ ...state }`처럼 spread syntax로 불변성을 지킬 필요가 없고,  바로 `draft.addPostLoading = true`와 같이 직접적으로 draft에 값을 넣어주기만 하면 `immer`가 불변성을 지키면서 다음 상태를 만들어낸다.
+
+(before)
+```js
+case ADD_POST_TO_ME:
+  return {
+    ...state,
+    me: {
+      ...state.me,
+      Posts: [{ id: action.data }, ...state.me.Posts],
+    },
+  };
+```
+(after) 코드의 길이가 짧아지고 더 직관적으로 바뀐 모습이다.
+```js
+case ADD_POST_TO_ME:
+  draft.me.Posts.unshift({ id: action.data });
+  break;
+```
+
+---
+
+## faker로 실감나는 더미데이터 만들기
+
+### 설치
+
+`npm i -D @faker-js/faker`
+
+### 사용
+```js
+import { faker } from "@faker-js/faker"
+...
+initialState.mainPosts = initialState.mainPosts.concat(
+  Array(20)
+    .fill()
+    .map(() => ({
+      id: shortId.generate(),
+      User: {
+        id: shortId.generate(),
+        nickname: faker.animal.bear(),
+      },
+      content: faker.lorem.paragraph(),
+      Images: [
+        {
+          id: shortId.generate(),
+          src: faker.image.cats(640, 480, true),
+        },
+      ],
+      Comments: [
+        {
+          id: shortId.generate(),
+          User: {
+            id: shortId.generate(),
+            nickname: faker.animal.cat(),
+          },
+          content: faker.lorem.sentence(),
+        },
+      ],
+    }))
+);
+```
+faker API 참고: https://fakerjs.dev/api/
+
+`concat` 메서드를 통해 초기 `mainPosts`에 20개의 게시글을 추가하는데, 이 때 추가할 게시글의 형태를 기존 게시글 형태와 같게 해준다.<br>
+
+### 로그인 안된 상태에서 프로필 페이지 접근 시 에러 발생하는 문제
+
+```js
+// pages/profile.js
+const profile = () => {
+  const { me } = useSelector((state) => state.user);
+
+  // 
+  useEffect(() => {
+    if (!(me && me.id)) {
+      Router.push("/");
+    }
+  }, [me && me.id]);
+
+  if (!me) {
+    return null;
+  }
+  ...
+}
+```
+
+deps 배열에 `me && me.id`를 넣어줘야 로그아웃 시 `useEffect`가 실행되어 메인페이지로 전환된다.
+
+또한 로그인이 되지 않을 때 `return null`을 통해 컴포넌트의 속성이 `me`에 접근하지 못하도록 막는다.
+---
 
