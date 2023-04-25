@@ -98,8 +98,6 @@ const reducer = (state = initialState, action) => {
         draft.logOutError = null;
         break;
       case LOG_OUT_SUCCESS:
-        // 여기서 logInDone: false를 안하면 logInDone도 true이고 logOutDone도 true라서 상태가 중첩이 되는 것 같은데..
-        // 어차피 다시 로그인하면 LOG_IN_REQUEST할 때 logInDone이 false가 되니까 굳이 작성을 안한걸까요?
         draft.logOutLoading = false;
         draft.logOutDone = true;
         draft.me = null;

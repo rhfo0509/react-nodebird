@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import Head from "next/head";
 import { useSelector } from "react-redux";
 import Router from "next/router";
@@ -10,13 +10,8 @@ import FollowList from "../components/FollowList";
 const profile = () => {
   const { me } = useSelector((state) => state.user);
 
-  useEffect(() => {
-    if (!(me && me.id)) {
-      Router.push("/");
-    }
-  }, [me && me.id]);
-
   if (!me) {
+    Router.push("/");
     return null;
   }
 

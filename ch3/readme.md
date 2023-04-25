@@ -930,23 +930,15 @@ faker API 참고: https://fakerjs.dev/api/
 const profile = () => {
   const { me } = useSelector((state) => state.user);
 
-  // 
-  useEffect(() => {
-    if (!(me && me.id)) {
-      Router.push("/");
-    }
-  }, [me && me.id]);
-
   if (!me) {
+    Router.push("/");
     return null;
   }
   ...
 }
 ```
 
-deps 배열에 `me && me.id`를 넣어줘야 로그아웃 시 `useEffect`가 실행되어 메인페이지로 전환된다.
-
-또한 로그인이 되지 않을 때 `return null`을 통해 컴포넌트의 속성이 `me`에 접근하지 못하도록 막는다.
+로그인이 안된 상태에서 프로필 페이지를 클릭하거나, 프로필 페이지에서 로그아웃하는 경우 `me`가 `null`이기 때문에 메인 페이지로 이동시켜준 다음 `return null`을 통해 컴포넌트의 속성이 `me`에 접근하지 못하도록 막는다.
 
 ---
 
@@ -1142,6 +1134,3 @@ if (hasMorePosts && !loadPostsLoading) {
 상대적으로 메모리가 적은 **모바일 환경**에서는 인피니트 스크롤링을 통해 게시글을 계속 받게 되면 성능이 저하되는 문제가 발생한다.
 
 화면에 실질적으로 보이는 게시글 수가 적다는 특성을 이용해 일부만 화면에 나타내고 나머지는 메모리에 저장하여 성능을 개선할 수 있다.
-
-
-
