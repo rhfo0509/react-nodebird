@@ -887,22 +887,23 @@ case ADD_POST_TO_ME:
 
 ### 사용
 ```js
+// reducers/post.js
 import { faker } from "@faker-js/faker"
 ...
 initialState.mainPosts = initialState.mainPosts.concat(
-  Array(20)
+  Array(number)
     .fill()
     .map(() => ({
       id: shortId.generate(),
       User: {
         id: shortId.generate(),
-        nickname: faker.animal.bear(),
+        nickname: faker.name.fullName(),
       },
       content: faker.lorem.paragraph(),
       Images: [
         {
           id: shortId.generate(),
-          src: faker.image.cats(640, 480, true),
+          src: faker.image.image(640, 480, true),
         },
       ],
       Comments: [
@@ -910,12 +911,12 @@ initialState.mainPosts = initialState.mainPosts.concat(
           id: shortId.generate(),
           User: {
             id: shortId.generate(),
-            nickname: faker.animal.cat(),
+            nickname: faker.name.fullName(),
           },
           content: faker.lorem.sentence(),
         },
       ],
-    }))
+    }));
 );
 ```
 faker API 참고: https://fakerjs.dev/api/
@@ -946,5 +947,201 @@ const profile = () => {
 deps 배열에 `me && me.id`를 넣어줘야 로그아웃 시 `useEffect`가 실행되어 메인페이지로 전환된다.
 
 또한 로그인이 되지 않을 때 `return null`을 통해 컴포넌트의 속성이 `me`에 접근하지 못하도록 막는다.
+
 ---
+
+## 인피니트 스크롤링 적용하기
+
+`post` reducer의 `initialState`를 보면 `mainPosts`에 더미데이터가 들어있는데, 실제로는 비어있는 상태에서 서버로부터 데이터를 받아올 것이다.
+
+초기 `mainPosts` 더미데이터는 없앤 다음, 페이지를 끝까지 스크롤할 때마다 서버로부터 일정한 개수만큼 데이터를 받아오기 위해
+```js
+// reducers/post.js
+initialState.mainPosts = initialState.mainPosts.concat(
+  Array(number)
+    .fill()
+    .map(() => ({
+      id: shortId.generate(),
+      User: {
+        id: shortId.generate(),
+        nickname: faker.name.fullName(),
+      },
+      content: faker.lorem.paragraph(),
+      Images: [
+        {
+          id: shortId.generate(),
+          src: faker.image.image(640, 480, true),
+        },
+      ],
+      Comments: [
+        {
+          id: shortId.generate(),
+          User: {
+            id: shortId.generate(),
+            nickname: faker.name.fullName(),
+          },
+          content: faker.lorem.sentence(),
+        },
+      ],
+    }));
+);
+```
+이 부분을
+```js
+export const generateDummyPost = (number) => {
+  return Array(number)
+    .fill()
+    .map(() => ({
+      id: shortId.generate(),
+      User: {
+        id: shortId.generate(),
+        nickname: faker.name.fullName(),
+      },
+      content: faker.lorem.paragraph(),
+      Images: [
+        {
+          id: shortId.generate(),
+          src: faker.image.image(640, 480, true),
+        },
+      ],
+      Comments: [
+        {
+          id: shortId.generate(),
+          User: {
+            id: shortId.generate(),
+            nickname: faker.name.fullName(),
+          },
+          content: faker.lorem.sentence(),
+        },
+      ],
+    }));
+};
+```
+이렇게 generate 함수로 만들어주어 **인피니트 스크롤링**을 구현할 수 있도록 한다.
+
+### 과정
+
+1. 처음에 화면을 로딩 시 `LOAD_POSTS_REQUEST` 액션을 dispatch
+```js
+// pages/index.js
+const Home = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch({ type: "LOAD_POSTS_REQUEST" });
+  }, []);
+  ...
+};
+```
+deps가 빈 배열인 경우, `componentDidMount`과 동일한 효과를 가지게 되어 컴포넌트가 처음으로 마운트되는 경우에만 dispatch된다.
+
+2. `postReducer`에서 상태를 업데이트함과 동시에 `postSaga`에서 액션을 감지하여 `loadPosts` 함수 호출
+
+3. `loadPosts`에 의해 1초 딜레이 후 `LOAD_POSTS_SUCCESS` 액션을 `generateDummyPost`로 만들어낸 더미포스트 data와 함께 dispatch
+```js
+// sagas/post.js
+function* loadPosts() {
+  try {
+    yield delay(1000);
+    yield put({
+      type: LOAD_POSTS_SUCCESS,
+      data: generateDummyPost(10),
+    });
+  } catch (err) {
+    yield put({
+      type: LOAD_POSTS_FAILURE,
+      error: err.respose.data,
+    });
+  }
+}
+```
+
+4. `postReducer`를 통해 기존 포스트가 새 더미포스트 뒤에 덧붙여진다.
+```js
+// reducers/post.js
+case LOAD_POSTS_SUCCESS:
+  draft.loadPostsLoading = false;
+  draft.loadPostsDone = true;
+  draft.mainPosts = action.data.concat(draft.mainPosts);
+  break;
+```
+
+5. `hasMorePosts` state를 두어, 처음엔 `true` 상태였다가 더 가져올 게시글이 없는 경우 `false` 상태가 되어 가져오려는 시도 자체를 막도록 한다.
+```js
+// reducers/post.js
+case LOAD_POSTS_SUCCESS:
+  draft.loadPostsLoading = false;
+  draft.loadPostsDone = true;
+  draft.mainPosts = action.data.concat(draft.mainPosts);
+  draft.hasMorePosts = draft.mainPosts.length < 50;
+  break;
+```
+포스트가 추가되어 총 포스트 수가 50개가 될 경우(50개를 임의로 최대 설정), `hasMorePosts`는 `false`가 되어 다음에 포스트를 불러올 경우, `hasMorePosts`에 의해 불러올 수 없게 된다. (이후에 나올 코드 참조)
+
+### 문서의 높이
+스크롤한 지점이 문서 끝에서 어느 정도에 위치해 있는지 파악하기 위해 3개의 속성이 사용된다.
+
+#### `window.scrollY`
+문서의 최상단으로부터 내려온 높이
+
+#### `document.documentElement.clientHeight`
+사용자에게 보여지는 높이
+
+#### `document.documentElement.scrollHeight`
+문서의 전체 높이로, 사용자에게 보여지지 않는 영역 포함
+
+![image](https://user-images.githubusercontent.com/85874042/234159341-1051a1c8-e1be-4cbe-978f-dc8c61e97cd0.png)
+└> (scrollY, clientHeight. scrollHeight 순서)
+
+페이지를 제일 끝까지 내렸을 때 `scrollY`의 경우, 페이지 최상단부터 페이지를 끝까지 내렸을 때의 페이지 최상단까지의 길이다.<br>
+즉 `scrollY`가 `scrollHeight - clientHeight` 임을 확인할 수 있고, 이를 이용해 문서를 끝까지 내렸는지의 여부에 대해 판단할 수 있다.
+
+```js
+// pages/index.js
+const Home = () => {
+  const dispatch = useDispatch();
+  const { hasMorePosts } = useSelector((state) => state.post);
+
+  useEffect(() => {
+    dispatch({ type: LOAD_POSTS_REQUEST });
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (
+        window.scrollY + document.documentElement.clientHeight >
+        document.documentElement.scrollHeight - 300
+      ) {
+        if (hasMorePosts) {
+          dispatch({ type: LOAD_POSTS_REQUEST });
+        }
+      }
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [hasMorePosts]);
+};
+```
+스크롤이 밑에서부터 300픽셀 기준으로 더 내려갔을 경우, `hasMorePosts`가 `true`인 경우에 더미포스트를 추가로 생성한다.<br>
+
+### `LOAD_POSTS_REQUEST` 액션이 여러 번 dispatch되는 문제
+그러나 스크롤 특성상 한 번 휠을 내릴 때마다 여러 번 이벤트가 호출되는데, `takeLatest` 특성상 호출은 여러 번 되고 응답만 마지막 호출에 대해서 한 번 이루어지기 때문에 이를 방지할 수 있는 방법이 필요하다.
+
+따라서 페이지가 로딩중인 경우에는 요청을 보내지 않고 있다가 로딩이 끝나는 경우에만 요청을 보내서 결과적으로 요청을 한 번만 보낼 수 있도록 한다.
+
+```js
+if (hasMorePosts && !loadPostsLoading) {
+  dispatch({ type: LOAD_POSTS_REQUEST });
+}
+```
+> `loadPostsLoading` 상태를 가져와서 로딩 상태가 다 끝난 경우에만 `LOAD_POSTS_REQUEST` 요청이 한번 가게 될 줄 알았으나... 두 번 연달아서 요청이 가게 되는 현상이 발생한다. `LOAD_POSTS_SUCCESS`는 한 번만 발생하기 때문에 결과상으로는 문제가 없는 것을 확인 할 수 있다.
+
+### `react-virtualized`
+
+상대적으로 메모리가 적은 **모바일 환경**에서는 인피니트 스크롤링을 통해 게시글을 계속 받게 되면 성능이 저하되는 문제가 발생한다.
+
+화면에 실질적으로 보이는 게시글 수가 적다는 특성을 이용해 일부만 화면에 나타내고 나머지는 메모리에 저장하여 성능을 개선할 수 있다.
+
+
 
