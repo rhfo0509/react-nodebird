@@ -14,4 +14,4 @@ router.post("/", (req, res) => {
   res.json({ id: 4, content: "test4"});
 })
 
-export default router;
+module.exports = router;
