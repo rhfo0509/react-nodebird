@@ -1,17 +1,19 @@
 const express = require("express");
 
+const { Post } = require("../models");
+
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.json([
-    { id: 1, content: "test1"},
-    { id: 2, content: "test2"},
-    { id: 3, content: "test3"},
-  ])
-});
-
-router.post("/", (req, res) => {
-  res.json({ id: 4, content: "test4"});
+router.post("/", async (req, res) => {
+  try {
+    const post = await Post.create({
+      content: req.body.content,
+    });
+    res.status(201).json(post);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 })
 
 module.exports = router;

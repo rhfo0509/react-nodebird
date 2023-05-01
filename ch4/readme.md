@@ -26,7 +26,7 @@ function logInAPI(data) {
 
 ### 프론트 서버와 백엔드 서버를 각각의 컴퓨터로 분리하는 이유는?
 
-대규모 앱이 되었을 때를 대비하기 위해서이다.<br>
+**대규모 앱**이 되었을 때를 대비하기 위해서이다.<br>
 하나의 컴퓨터 내에 프론트 서버와 백엔드 서버가 있는 경우를 생각해보자.<br>
 예를 들어 프론트 요청이 백 요청보다 더 많이 와서 서버를 스케일링해야 하는 경우, 프론트 서버와 백 서버가 동시에 증설이 되기 때문에 백 서버가 불필요하게 추가되는 문제가 발생한다.
 
@@ -38,7 +38,7 @@ function logInAPI(data) {
 
 ### 설치
 
-`npm i express`을 통해 패키지 설치
+`npm i express`
 
 ### 익스프레스를 사용하는 이유?
 
@@ -46,7 +46,6 @@ function logInAPI(data) {
 const http = require("http");
 
 const server = http.createServer((req, res) => {
-  console.log(req.url, req.method);
   if (req.method === 'GET') {
     if (req.url === '/api/posts') {
       ...
@@ -93,13 +92,13 @@ app.listen(3065, () => {
 
 express를 이용한다면 `app.method(prefix, handler)` 방식을 통해 간단하게 요청을 보낼 수 있게 된다.
 
-### POSTMAN / swagger
+### postman / swagger
 
-**POSTMAN**은 개발한 API를 테스트하고, 테스트 결과를 공유하여 API 개발의 생산성을 높여주는 도구이다.
+**postman**은 개발한 API를 테스트하고, 테스트 결과를 공유하여 API 개발의 생산성을 높여주는 도구이다.
 
 ![image](https://user-images.githubusercontent.com/85874042/234747152-afccbfdf-48a3-423e-a743-2c2774f23d71.png)
 
-주소창에 접근 시 바로 실행되는 get 요청이 아닌 post나 put, delete 등의 요청은 위와 같이 POSTMAN을 이용해 간단하게 테스트를 할 수 있다.
+주소창에 접근 시 바로 실행되지 않는 post나 put, delete 등의 요청은 위와 같이 postman을 이용해 간단하게 테스트를 할 수 있다.
 
 **swagger**는 프론트엔드와 백엔드 사이에 데이터를 어떤 방식으로 주고받을지에 대한 API 명세를 도와주는 도구이다.
 
@@ -128,9 +127,10 @@ router.post("/", (req, res) => {
 export default router;
 ```
 
-`express.Router()`를 통해 만든 router 객체를 통해 라우터를 분리할 수 있다.
+`express.Router()`를 통해 만든 router 객체를 이용하여 라우터를 분리할 수 있다.
 
 ```js
+// app.js
 const express = require("express");
 const postRouter = require("./routes/post");
 
@@ -147,7 +147,7 @@ app.listen(3065, () => {
 });
 ```
 
-분리한 라우터는 `app.js`에서 import한 후, `app.use`를 이용하여 연결한다. 이 때 prefix 부분에 `/api/post`를 넣음으로써 중복되는 부분을 밖으로 빼낼 수 있다.
+분리한 라우터를 `app.js`에서 import한 후, `app.use`를 이용하여 연결한다. 이 때 prefix 부분에 `/api/post`를 넣음으로써 중복되는 부분을 밖으로 빼낼 수 있다.
 
 ```js
 router.post("/", (req, res) => {
@@ -167,7 +167,7 @@ MySQL 설치 후,
 `npm i sequelize sequelize-cli mysql2` 패키지 설치
 
 - **mysql2**: node와 MySQL을 연결해주는 드라이버
-- **sequelize**: **자바스크립트**로 SQL 조작할 수 있도록 도와주는 라이브러리
+- **sequelize**: JavaScript로 SQL을 조작할 수 있도록 도와주는 라이브러리
 
 ### 설정
 
@@ -200,7 +200,7 @@ MySQL 설치 후,
 }
 ```
 
-`config.json` 파일에는 MySQL과 연동할 때 사용되는 정보가 담겨있다. 여기서 `password` 부분과 `database` 부분을 수정한다.
+config 폴더 내에 있는 `config.json` 파일에는 MySQL과 연동할 때 사용되는 정보가 담겨있다. 여기서 `password` 부분과 `database` 부분을 수정한다.
 
 ```js
 // models/index.js
@@ -269,7 +269,7 @@ module.exports = User;
 
 `static initiate` 메서드 내의 `User.init`의 첫번째 인수로 테이블 컬럼의 속성을 작성하고, 두 번재 인수로는 테이블 자체에 대한 설정을 작성한다.
 
-이 때 charset과 collate을 `utf8mb4`와 `utf8mb4_general_ci`로 작성해야 이모티콘까지 입력이 가능해진다.
+이 때 charset과 collate을 `utf8mb4`와 `utf8mb4_general_ci`로 작성하는 경우 이모티콘까지 입력이 가능해진다.
 
 ---
 
@@ -279,7 +279,7 @@ module.exports = User;
 
 1. **1 : N**
 
-User-Post 같은 `1대다` 관계인 경우 `belongsTo`가 작성된 Post 테이블 속성에 `UserId`와 `PostId` 컬럼이 추가된다.
+User-Post 같은 `1대다` 관계인 경우 `belongsTo`가 작성된 Post의 테이블에 `UserId` 컬럼이 추가된다.
 
 ```js
 // models/user.js
@@ -298,27 +298,27 @@ static associate(db) {
 2. **N : M**
 
 Post-Hashtag 같은 `다대다` 관계인 경우 양쪽 다 `belongsToMany`로 작성하게 되면 `PostId`와 `HashtagId`를 담고 있는 중간 테이블이 시퀄라이즈에 의해 생성된다.<br>
-(중간 테이블명을 지정하지 않을 시 `PostHashtag`와 같이 두 테이블명을 합침)
+(중간 테이블명을 `through`를 통해 지정할 수 있으며, 보통 `PostHashtag`와 같이 두 테이블명을 합침)
 
 ```js
 // models/post.js
 static associate(db) {
-    db.Post.belongsToMany(db.Hashtag);
+    db.Post.belongsToMany(db.Hashtag, { through: "PostHashtag" });
   }
 ```
 
 ```js
 // models/hashtag.js
 static associate(db) {
-    db.Hashtag.belongsToMany(db.Post);
+    db.Hashtag.belongsToMany(db.Post, { through: "PostHashtag" });
   }
 ```
 
-**중간 테이블**을 통해 '해시태그를 포함하는 게시글' 또는 '게시글 내의 해시태그'를 조회할 수 있게 된다.
+**중간 테이블**을 통해 '특정 해시태그를 포함하는 게시글' 또는 '특정 게시글 내에 있는 해시태그'를 조회할 수 있게 된다.
 
 ### User-Post 간의 "**좋아요**" 관계(**다대다**)
 
-User-Post 간의 "**좋아요**" 관계를 위한 중간 테이블명을 `through`를 통해 지정할 수 있다. 또 `as`를 사용해서 테이블의 별칭을 지정할 수 있는데, `post.getLiker()`, `user.getLiked()`와 같이 별칭을 이용해 '게시글에 좋아요를 누른 사람'과 '유저가 좋아요를 누른 게시글'을 조회할 수 있다.
+`as`를 사용해서 테이블의 별칭을 지정할 수 있는데, `post.getLiker()`, `user.getLiked()`와 같이 별칭을 이용해 '게시글에 좋아요를 누른 사람'과 '유저가 좋아요를 누른 게시글'을 조회할 수 있다.
 
 ```js
 // models/user.js
@@ -338,11 +338,11 @@ static associate(db) {
 
 ### User-User 간의 "**팔로우**" 관계(**다대다**)
 
-예를 들어 *hero*의 팔로워를 찾는다고 가정해보자. 팔로워 입장에서는 *hero*를 **팔로잉**한 것이므로 `Following` 컬럼에서 *hero*를 찾는 것이 우선이다. 그러면 대응되는 `Follower` 컬럼에 위치한 *zero*와 *nero*가 바로 *hero*의 팔로워가 되는 것이다.
+예를 들어 *hero*의 팔로워를 찾는다고 가정해보자. 팔로워 입장에서는 *hero*를 **팔로잉**한 것이므로 `FollowingId` 컬럼에서 *hero*를 찾는 것이 우선이다. 그러면 대응되는 `FollowerId` 컬럼에 위치한 *zero*가 바로 *hero*의 팔로워가 되는 것이다.
 
 <br>
 
-![image](https://user-images.githubusercontent.com/85874042/234910859-89e44869-818e-457c-b8a8-61275c4e0446.png)
+![image](https://user-images.githubusercontent.com/85874042/235387238-f664c5d4-73b9-49b2-930b-d79dbcec315a.png)
 
 ```js
 // models/user.js
@@ -360,8 +360,9 @@ static associate(db) {
   }
 ```
 
-> 같은 모델 간의 관계가 다대다를 갖는 경우, 반드시 `foreignKey`가 필요한데, 테이블 두 개가 서로 같기 때문에 중간 테이블의 두 컬럼이 서로 중복된 이름을 가지기 때문이다.<br>
-> 그렇기 때문에 별칭으로 지정한 `Followers` 테이블의 경우 `foreignKey` 값으로 `FollowingId`가 들어있어야 하고, `Followings` 테이블의 경우 `foreignKey` 값으로 `FollowerId`가 들어있어야 한다.
+> 같은 모델 간의 관계가 다대다를 갖는 경우, 반드시 `foreignKey`가 필요한데, 테이블 두 개가 서로 같기 때문에 중간 테이블의 두 컬럼이 서로 중복된 이름을 가지기 때문이다.
+
+> 별칭으로 지정한 `Followers` 테이블의 경우 `foreignKey` 값으로 `FollowingId`가 들어있어야 하고, `Followings` 테이블의 경우 `foreignKey` 값으로 `FollowerId`가 들어있어야 한다. 
 
 ### Post-Post 간의 "**리트윗**" 관계
 
@@ -397,9 +398,8 @@ const sequelize = new Sequelize(
   config.password,
   config
 );
-
-db.sequelize = sequelize; // 1
-
+// 1
+db.sequelize = sequelize;
 // 2
 db.User = User;
 db.Post = Post;
@@ -468,7 +468,6 @@ function* signUp(action) {
   }
 }
 ```
-
 post 요청을 보낼 백엔드 서버의 위치는 `http://localhost:3065/user`이다.
 
 2. API 요청을 받을 `userRouter` 생성
@@ -508,7 +507,6 @@ router.post("/", async (req, res, next) => {
 
 module.exports = router;
 ```
-
 _403_(forbidden), _201_(created)와 같이 status code를 작성해주는 것이 좋다.<br>
 `bcrypt.hash`의 라운드 수는 10~13 사이로 설정한다.
 
@@ -538,11 +536,11 @@ Cross-Origin Resource Sharing의 줄임말로, **서로 다른 출처의 리소�
 > **출처(origin)** -> protocol + host + port<br>
 > 프론트 서버의 출처(origin)는 `http://localhost:3065`이고, 백엔드 서버의 출처는 `http://localhost:3000`이기 때문에 서로 port가 달라 다른 출처를 가지게 된다.
 
-다른 출처로 요청을 보내게 되면 출처 비교 후 다른 출처인 경우 차단을 하게 되는데, 이 행위를 서버가 아닌 **브라우저**에서 하게 된다. 즉, 서버 측에서는 정상적으로 응답을 하지만 이 응답을 브라우저에 받을 수 없게 되는 것이다.
+요청을 보내게 되면 출처 비교 후 다른 출처인 경우 차단을 하게 되는데, 이 행위를 서버가 아닌 **브라우저**에서 하게 된다. 즉, 서버 측에서는 정상적으로 응답을 하지만 이 응답을 브라우저에 받을 수 없게 되는 것이다.
 
 그래서 브라우저에서 요청을 하는 것이 아닌 서버에서 다른 서버로 요청을 하는 경우는 CORS 정책이 적용되지 않는다.
 
-### 서로 다른 출처 간의 리소스 공유 허용 설정을 하려면?
+### 서로 다른 출처 간에 리소스를 공유하려면?
 
 1. **Proxy**
 
@@ -554,10 +552,13 @@ Cross-Origin Resource Sharing의 줄임말로, **서로 다른 출처의 리소�
 > 클라이언트는 `Origin`과 `Access-Control-Allow-Origin`을 비교해서 차단 여부를 결정한다.
 
 `npm i cors` 설치 후 `app.use(cors({ origin: * }))`로 모든 출처에서의 요청을 허용할 수 있다.<br>
-`*` 대신 `true`로 설정해두면 요청을 보낸 주소가 `Access-Control-Allow-Origin`에 들어가게 되어 쿠키를 전송할 수 있게 된다.
+
+`*` 대신 `true`로 설정해두면 요청을 보낸 주소가 `Access-Control-Allow-Origin`에 들어가게 되어 쿠키 전송이 가능해진다.
 
 cors 적용 후 요청을 보내면
+
 ![image](https://user-images.githubusercontent.com/85874042/235072647-e2eda362-748d-416f-9285-087130740a6a.png)
+
 POST 말고도 OPTIONS 요청도 포함되어 있는데 이 OPTIONS 요청에서 `Origin`과 `Access-Control-Allow-Origin`을 비교하게 된다.
 
 ### 회원가입 후 메인페이지 이동
@@ -627,15 +628,15 @@ function* logIn(action) {
 }
 ```
 
-`signUpAPI`의 백엔드 주소와 `http://localhost:3065` 부분이 겹치기 때문에 `sagas/index.js`에서
+이 때 `signUpAPI`의 백엔드 주소와 `http://localhost:3065` 부분이 겹치기 때문에 `sagas/index.js`에서
 
-`axios.defaults.baseURL = "http://localhost:3065"`를 작성해서 중복을 제거한다.
+`axios.defaults.baseURL = "http://localhost:3065"`를 작성하여 중복을 제거한다.
 
 2. 패키지 설치
 
 `npm i passport passport-local bcrypt`
 
-로그인 과정을 쉽게 처리할 수 있도록 도와주는 `passport` 및 username/email을 사용해 로그인 전략을 구현하는 `passport-local` 모듈을 설치한다.
+로그인 과정을 쉽게 처리할 수 있도록 도와주는 `passport` 및 username / password을 사용해 로그인 전략을 구현하는 `passport-local` 모듈을 설치한다.
 
 3. passport 폴더를 만들고 그 안에 passport 설정 파일인 `index.js`를 작성한다.
 
@@ -677,7 +678,7 @@ const passportConfig = require("./passport");
 passportConfig();
 ```
 
-6. 로그인 전략을 구체적으로 작성한다.
+6. 다시 `localStrategy.js`로 가서 로그인 전략을 구체적으로 작성한다.
 
 ```js
 // back/passport/localStrategy.js
@@ -689,12 +690,12 @@ module.exports = () => {
   passport.use(
     new LocalStrategy(
       {
-        usernameField: "id", // req.body.id
+        usernameField: "email", // req.body.email
         passwordField: "password", // req.body.password
       },
-      async (id, password, done) => {
+      async (email, password, done) => {
         try {
-          const user = await User.findOne({ where: { id } });
+          const user = await User.findOne({ where: { email } });
           if (user) {
             const result = await bcrypt.compare(password, user.password);
             if (result) {
@@ -703,7 +704,7 @@ module.exports = () => {
               done(null, false, { message: "비밀번호가 일치하지 않습니다." });
             }
           } else {
-            done(null, false, { message: "가입되지 않은 회원입니다." });
+            done(null, false, { message: "존재하지 않는 이메일입니다." });
           }
         } catch (error) {
           console.error(error);
@@ -715,4 +716,308 @@ module.exports = () => {
 };
 ```
 
-`usernameField`와 `passwordField`
+`new LocalStrategy`의 첫 번째 인수에 있는 `usernameField`와 `passwordField`에는 로그인 폼 제출 시 프론트로부터 `req.body`로 받은 데이터의 속성명을 넣어준다.
+
+그리고 두 번째 인수에서 로그인 전략을 세울 수 있는데, 여러 상황에 따라 `done(error, user, options)` 함수에 넣어주는 인수가 달라진다.
+
+* `error` : 서버 측에서 에러가 발생한 경우 error 객체 담아 전송, 나머지 경우는 null
+* `user` : 로그인이 성공했을 경우에 user 객체 담아 전송, 실패 시 false
+* `options` : 로그인이 실패했을 때 그 이유를 담으려는 경우에 작성
+
+이메일이 있는지를 먼저 찾음<br>
+-> 존재하지 않는 경우 `done(null, false, { message: "존재하지 않는 이메일입니다." })` 호출<br>
+-> 존재하는 경우 `bcrypt.compare` 메서드를 통해 비밀번호가 일치하는지 검사<br>
+-> 일치하지 않는 경우 `done(null, false, { message: "비밀번호가 일치하지 않습니다." })` 호출<br>
+-> 일치하는 경우 `done(null, user)` 호출<br>
+-> 도중에 서버 에러가 발생할 경우 `done(error)` 호출
+
+로그인 요청이 들어오면 `passport.authenticate("local")`를 통해 로그인 전략이 수행되고, 이후 호출되는 `done` 함수는 `passport.authenticate`의 두 번째 인수인 callback으로 들어가게 된다.
+```js
+// back/routes/user.js
+...
+router.post(
+  "/login",
+  (req, res, next) => {
+    passport.authenticate("local", (error, user, info) => {
+      if (error) {
+        console.error(error);
+        return next(error);
+      }
+      if (info) {
+        // 401: Unauthorized(미인증)
+        return res.status(401).send(info.message);
+      }
+      return req.login(user, async (loginError) => {
+        if (loginError) {
+          console.error(loginError);
+          return next(loginError);
+        }
+        return res.status(200).json(user);
+      })
+    })(req, res, next);
+  }
+);
+...
+```
+* `passport.authenticate` 메서드는 req, res, next를 인수로 받지 않기 때문에 **미들웨어 확장법**을 이용해서 req, res, next에 접근할 수 있도록 할 수 있다.
+
+* `req.login` 메서드는 로그인 성공 시 `passport.authenticate`에 의해 자동으로 호출되며, `req.login`에 의해 `passport.serializeUser`가 호출되어 세션 객체에 로그인한 유저 정보가 저장된다. (후술)
+
+---
+
+## 쿠키/세션과 전체 로그인 흐름
+
+### 쿠키/세션
+
+서버에 로그인한 유저 정보가 저장된다고 해서 브라우저에 똑같이 반영되지 않기 때문에 유저 정보를 브라우저로 넘겨주는 과정이 필요하다. 
+
+이 때 **쿠키**와 **세션**이 사용되는데, 사용자 정보는 서버의 **세션** 객체에 저장되고 브라우저에는 세션 객체를 조회할 수 있는 **쿠키**가 전달된다.
+
+이제 서버는 요청이 올 때마다 클라이언트로부터 쿠키를 수집하여 내부의 세션 저장소에서 세션 ID를 조회해 현재 로그인한 유저를 식별할 수 있게 된다.
+
+#### 쿠키/세션 설정
+
+`npm i express-session cookie-parser dotenv`
+
+```js
+// back/app.js
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
+const passport = require("passport");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+app.use(cookieParser(process.env.COOKIE_SECRET));
+app.use(session({
+  saveUninitialized: false,
+  resave: false,
+  secret: process.env.COOKIE_SECRET,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+```
+
+* `passport.initialize`: `req`에 `isAuthenticated`, `login`, `logout` 메서드와 같은 passport 설정을 심음
+* `passport.session` : `req.session` 객체에 사용자 정보를 저장하는 역할, 반드시 `express-session`을 사용하는 미들웨어 다음에 위치해야 함
+
+#### dotenv
+
+`req.login`가 성공적으로 수행되면 
+
+![image](https://user-images.githubusercontent.com/85874042/235393730-87fc30b2-bbc7-4859-8263-e2c786c2d7ff.png)
+
+이렇게 브라우저에게 세션 객체에 접근 가능한 키값을 쿠키로 제공하는데 문제는 이 값이 user 데이터를 기반으로 만들어진 것이라는 점이다.
+
+소스코드가 해커에 의해 노출될 경우 secret 값이 하드코딩되어 있다면 이 secret 값과 전달받은 쿠키를 이용해 데이터를 복원할 수 있기 때문에 secret 값을 다른 파일로 옮겨서 관리할 필요가 있다.
+
+`dotenv` 모듈 설치 후 `.env` 파일에 키값을 저장한 후 `dotenv.config()`를 하면 `.env` 내 키값에 접근이 가능해진다. 이제 이 `.env` 파일만 잘 관리하면 되기 때문에 유지보수가 훨씬 간편해질 것이다.
+
+### 로그인 과정
+
+1. userSaga에서 `/user/login`으로 로그인 요청을 보냄
+2. userRouter에서 이를 감지하고 `passport.authenticate` 메서드 호출
+3. local 로그인 전략(`localStrategy`) 수행
+4. 로그인 성공 시 user 객체와 함께 `req.login` 호출
+5. `req.login`에 의해 `passport.serializeUser` 호출
+
+```js
+// back/passport/index.js
+
+const passport = require("passport");
+const { User } = require("../models");
+const local = require("./localStrategy");
+
+module.exports = () => {
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const user = await User.findOne({ where: { id } });
+      done(null, user);
+    } catch (error) {
+      console.error(error);
+      done(error);
+    }
+  });
+
+  local();
+};
+```
+6. `done(null, user.id)`이 실행되면 세션(`req.session`) 객체에는 사용자 id 값만 저장됨(**메모리 최적화**를 위해)
+7. `done` 실행 후 `req.login`의 callback 함수가 실행되어 프론트에 쿠키와 유저 정보 넘겨준 후 서버 로직이 종료됨
+9. 프론트에서는 userSaga에서 넘겨받은 유저 정보와 함께 `LOG_IN_SUCCESS`를 dispatch한 다음 userReducer를 통해 `me` 객체에 유저 정보를 넣어준다. (끝)
+
+### 로그인 이후 과정
+
+1. 모든 요청에 대해 `passport.session` 미들웨어가 `passport.deserializeUser` 메서드 호출
+2. `req.session`에 저장된 아이디로 데이터베이스에서 사용자 조회
+3. 조회된 사용자 정보를 `req.user`에 저장
+4. 라우터에서 `req.user` 객체 사용 가능
+
+### 로그아웃 과정
+
+```js
+// back/routes/user.js
+...
+router.post("/logout", isLoggedIn, (req, res) => {
+  req.logout((error) => {
+    if (error) {
+      console.error(error);
+      return next(error);
+    } else {
+      req.session.destroy();
+      res.send("ok");
+    }
+  });
+});
+...
+```
+
+---
+
+## 로그인 문제 해결하기
+
+### `me` 객체 수정
+
+![image](https://user-images.githubusercontent.com/85874042/235410588-971cf72d-13c8-4337-a66e-691ca42d9bb8.png)
+
+![image](https://user-images.githubusercontent.com/85874042/235410513-5cd21a86-d5df-4d96-9b5f-5db2a456ded9.png)
+
+서버로부터 전달받은 `me` 객체의 경우 다른 테이블과 조인이 되지 않은 상태이기 때문에 `me.Posts`, `me.Followings`을 가져오는 과정에서 에러가 발생하게 된다.
+
+```js
+// back/routes/user.js
+...
+router.post("/login", (req, res, next) => {
+  passport.authenticate("local", (error, user, info) => {
+    if (error) {
+      console.error(error);
+      return next(error);
+    }
+    if (info) {
+      return res.status(401).send(info.message);
+    }
+    return req.login(user, async (loginError) => {
+      if (loginError) {
+        console.error(loginError);
+        return next(loginError);
+      }
+      const fullUserWithoutPassword = await User.findByPk(user.id, {
+        attributes: {
+          exclude: ["password"],
+        },
+        include: [
+          {
+            // hasMany이기 때문에 복수형이 되어 me.Posts가 된다.
+            model: Post,
+          },
+          {
+            model: User,
+            as: "Followings",
+          },
+          {
+            model: User,
+            as: "Followers",
+          },
+        ],
+      });
+      return res.status(200).json(fullUserWithoutPassword);
+    });
+  })(req, res, next);
+});
+```
+따라서 `include`를 통해 관계있는 테이블을 조인함과 동시에 `attributes`의 `exclude`로 비밀번호 속성은 제외하고 가져올 수 있도록 한다.
+
+![image](https://user-images.githubusercontent.com/85874042/235411652-e8cf1730-dfe9-4e5d-9d92-913f18baa785.png)
+
+### 로그인 실패 시의 로직 추가 - `alert` 메시지 출력
+
+```js
+// front/components/LoginForm.js
+const LoginForm = () => {
+  ...
+  const { logInLoading, logInError } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (logInError) {
+      alert(logInError);
+    }
+  }, [logInError]);
+  ...
+}
+```
+
+### 로그인이 되어 있는 동안 회원가입 페이지 접근 차단
+```js
+// front/pages/signup.js
+const signup = () => {
+  const { signUpLoading, signUpDone, signUpError, logInDone } = useSelector(
+    (state) => state.user
+  );
+
+  useEffect(() => {
+    if (logInDone) {
+      Router.replace("/");
+    }
+  }, [logInDone]);
+}
+```
+* `Router.replace`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지 -> **뒤로가기** -> 홈
+* `Router.push`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지 -> **뒤로가기** -> 회원가입 페이지
+---
+
+## 미들웨어로 라우터 검사하기
+
+유저가 로그인을 했는데 다시 로그인을 하려고 한다거나, 로그인이 되지 않았는데도 로그아웃을 하려는 경우 문제가 발생한다.
+
+로그인 여부를 검사하는 미들웨어를 만들어 라우터에 장착한다.
+
+```js
+// back/routes/middlewares.js
+
+exports.isLoggedIn = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    next();
+  } else {
+    res.status(401).send("로그인이 필요합니다.");
+  }
+}
+
+exports.isNotLoggedIn = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    next();
+  } else {
+    res.status(401).send("로그인하지 않은 사용자만 접근이 가능합니다.");
+  }
+}
+```
+
+로그아웃 요청을 받은 경우 로그인된 사용자인 경우(`isLoggedIn`)에만 `next()` 메서드에 의해 다음 미들웨어가 호출되고, 만약 아니라면 프론트에게 "로그인이 필요합니다."라는 메시지만 전달되고 다음 미들웨어는 호출되지 않는다.
+* `next()`: 다음 미들웨어 호출
+* `next(error)`: 에러처리 미들웨어 호출
+
+```js
+// back/routes/user.js
+
+router.post("/logout", isLoggedIn, (req, res) => {
+  req.logout((error) => {
+    if (error) {
+      console.error(error);
+      return next(error);
+    } else {
+      req.session.destroy();
+      res.send("ok");
+    }
+  });
+});
+```
+
+---
+
+## 게시글, 댓글 작성하기
+
+`dummyPost`, `dummyComment` 대신 실제로 유저가 작성한 게시글과 댓글을 DB에 저장한다.
+

@@ -8,7 +8,7 @@ import {
 } from "../reducers/user";
 
 function logInAPI(data) {
-  return axios.post("http://localhost:3065/user/login", data);
+  return axios.post("/user/login", data);
 }
 
 function* logIn(action) {
@@ -32,8 +32,7 @@ function logOutAPI() {
 
 function* logOut() {
   try {
-    // const result = yield call(logOutAPI);
-    yield delay(1000);
+    yield call(logOutAPI);
     yield put({
       type: LOG_OUT_SUCCESS,
     });
@@ -46,7 +45,7 @@ function* logOut() {
 }
 
 function signUpAPI(data) {
-  return axios.post("http://localhost:3065/user", data);
+  return axios.post("/user", data);
 }
 
 function* signUp(action) {
