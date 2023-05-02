@@ -868,15 +868,16 @@ router.post("/logout", isLoggedIn, (req, res) => {
       console.error(error);
       return next(error);
     } else {
-      req.session.destroy();
-      res.send("ok");
+      req.session.destroy(() => {
+        res.clearCookie("connect.sid");
+        res.status(200).send("ok");
+      });
     }
   });
 });
 ...
 ```
-
----
+로그아웃 요청이 들어오면 `req.session.destroy` 메서드로 세션 파괴 및 `res.clearCookie`로 쿠키를 삭제한다. 
 
 ## 로그인 문제 해결하기
 
@@ -965,15 +966,15 @@ const signup = () => {
   }, [logInDone]);
 }
 ```
-* `Router.replace`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지 -> **뒤로가기** -> 홈
-* `Router.push`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지 -> **뒤로가기** -> 회원가입 페이지
+* `Router.replace`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지(`/`) -> **뒤로가기** -> 홈
+* `Router.push`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지(`/`) -> **뒤로가기** -> 회원가입 페이지
 ---
 
 ## 미들웨어로 라우터 검사하기
 
 유저가 로그인을 했는데 다시 로그인을 하려고 한다거나, 로그인이 되지 않았는데도 로그아웃을 하려는 경우 문제가 발생한다.
 
-로그인 여부를 검사하는 미들웨어를 만들어 라우터에 장착한다.
+**로그인 여부를 검사**하는 미들웨어를 만들어 라우터에 장착한다.
 
 ```js
 // back/routes/middlewares.js
@@ -999,25 +1000,112 @@ exports.isNotLoggedIn = (req, res, next) => {
 * `next()`: 다음 미들웨어 호출
 * `next(error)`: 에러처리 미들웨어 호출
 
-```js
-// back/routes/user.js
-
-router.post("/logout", isLoggedIn, (req, res) => {
-  req.logout((error) => {
-    if (error) {
-      console.error(error);
-      return next(error);
-    } else {
-      req.session.destroy();
-      res.send("ok");
-    }
-  });
-});
-```
-
 ---
 
 ## 게시글, 댓글 작성하기
 
 `dummyPost`, `dummyComment` 대신 실제로 유저가 작성한 게시글과 댓글을 DB에 저장한다.
+
+### 게시글 작성 로직
+1. `front/components/PostForm.js`
+
+`dispatch({ type: ADD_POST_REQUEST, data: text })`
+
+2. `front/sagas/post.js`
+
+`axios.post("/post", { content: data })`
+
+3. `back/routes/post.js`
+
+```js
+router.post("/", async (req, res, next) => {
+  try {
+    const post = await Post.create({
+      content: req.body.content,
+      userId: req.user.id,
+    });
+    res.status(201).json(post);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+
+4. `front/sagas/post.js`
+
+json 형식으로 받은 데이터는 result.data로 접근 가능<br>
+`{ type: ADD_POST_SUCCESS, data: result.data }` + `{ type: ADD_POST_TO_ME, data: result.data.id }`를 dispatch
+
+5. `front/reducers/post.js`
+
+`draft.mainPosts.unshift(action.data)`로 최상단에 게시글 추가
+
+### 댓글 작성 로직
+
+1. `front/components/PostForm.js`
+
+`dispatch({ type: ADD_COMMENT_REQUEST, data: { content: commentText, postId: post.id, userId: id } })`
+
+2. `front/sagas/post.js`
+
+``axios.post(`/post/${data.postId}/comment`, data)``
+
+3. `back/routes/post.js`
+
+```js
+router.post("/:postId/comment", async (req, res, next) => {
+  try {
+    const comment = await Comment.create({
+      content: req.body.content,
+      postId: req.body.postId,
+      userId: req.body.userId,
+    });
+    res.status(201).json(comment);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+
+4. `front/sagas/post.js`
+
+json 형식으로 받은 데이터는 result.data로 접근 가능<br>
+`{ type: ADD_COMMENT_SUCCESS, data: result.data }`를 dispatch
+
+5. `front/reducers/post.js`
+
+`post.Comments.unshift(action.data);`로 작성한 게시글의 최상단에 댓글 추가
+
+---
+
+## credentials로 쿠키 공유하기
+
+### `req.user` 값을 받아올 수 없는 문제
+
+백엔드 서버와 브라우저 간의 **origin**이 다른 경우에, CORS 문제가 발생할 뿐만 아니라 쿠키 또한 전송이 되지 않는다.
+
+### 설정
+
+```js
+// back/app.js
+app.use(cors({ origin: true, credentials: true }));
+```
+credentials를 `true`로 설정 -> 이 때 CORS policy에 의해 origin에는 wildcard가 아닌 반드시 주소를 명시적으로 적어줘야 한다. (`true`도 가능)
+
+```js
+// front/sagas/index.js
+axios.defaults.withCredentials = true;
+```
+프론트에서도 똑같이 withCredential을 `true`로 설정하게 되면 쿠키 전송이 가능해진다.
+
+---
+
+## 내 로그인 정보 매번 불러오기
+
+### 새로고침할 때마다 로그인이 풀리는 문제
+
+새로고침을 하게 되면 스토어 값이 모두 초기화가 된다. 따라서 `me`가 `null`이 되기 때문에 `UserProfile` 대신 `LoginForm` 컴포넌트가 나타나게 되는 것이다.
+
 

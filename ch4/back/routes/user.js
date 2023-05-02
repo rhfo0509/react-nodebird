@@ -2,7 +2,7 @@ const express = require("express");
 const passport = require("passport");
 const bcrypt = require("bcrypt");
 const { User, Post } = require("../models");
-const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
+const { isLoggedIn, isNotLoggedIn } = require("./middlewares");
 
 const router = express.Router();
 
@@ -50,8 +50,10 @@ router.post("/logout", isLoggedIn, (req, res) => {
       console.error(error);
       return next(error);
     } else {
-      req.session.destroy();
-      res.send("ok");
+      req.session.destroy(() => {
+        res.clearCookie("connect.sid");
+        res.status(200).send("ok");
+      });
     }
   });
 });
@@ -75,9 +77,40 @@ router.post("/", isNotLoggedIn, async (req, res, next) => {
       password: hashedPassword,
     });
     res.status(201).send("ok");
-  } catch (err) {
-    console.error(err);
-    next(err);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+router.get("/", async (req, res, next) => {
+  try {
+    if (req.user) {
+      const fullUserWithoutPassword = await User.findByPk(req.user.id, {
+        attributes: {
+          exclude: ["password"],
+        },
+        include: [
+          {
+            model: Post,
+          },
+          {
+            model: User,
+            as: "Followings",
+          },
+          {
+            model: User,
+            as: "Followers",
+          },
+        ],
+      });
+      res.status(200).json(fullUserWithoutPassword);
+    } else {
+      res.status(200).json(null);
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 });
 
