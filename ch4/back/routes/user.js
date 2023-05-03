@@ -1,6 +1,7 @@
 const express = require("express");
 const passport = require("passport");
 const bcrypt = require("bcrypt");
+
 const { User, Post } = require("../models");
 const { isLoggedIn, isNotLoggedIn } = require("./middlewares");
 
@@ -21,21 +22,25 @@ router.post("/login", isNotLoggedIn, (req, res, next) => {
         return next(loginError);
       }
       console.log(req.session);
-      const fullUserWithoutPassword = await User.findByPk(user.id, {
+      const fullUserWithoutPassword = await User.findOne({
+        where: { id: user.id },
         attributes: {
           exclude: ["password"],
         },
         include: [
           {
             model: Post,
+            attributes: ["id"],
           },
           {
             model: User,
             as: "Followings",
+            attributes: ["id"],
           },
           {
             model: User,
             as: "Followers",
+            attributes: ["id"],
           },
         ],
       });
@@ -86,21 +91,25 @@ router.post("/", isNotLoggedIn, async (req, res, next) => {
 router.get("/", async (req, res, next) => {
   try {
     if (req.user) {
-      const fullUserWithoutPassword = await User.findByPk(req.user.id, {
+      const fullUserWithoutPassword = await User.findOne({
+        where: { id: req.user.id },
         attributes: {
           exclude: ["password"],
         },
         include: [
           {
             model: Post,
+            attributes: ["id"],
           },
           {
             model: User,
             as: "Followings",
+            attributes: ["id"],
           },
           {
             model: User,
             as: "Followers",
+            attributes: ["id"],
           },
         ],
       });

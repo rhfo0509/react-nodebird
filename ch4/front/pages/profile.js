@@ -11,7 +11,7 @@ const profile = () => {
   const { me } = useSelector((state) => state.user);
 
   if (!me) {
-    Router.push("/");
+    Router.replace("/");
     return null;
   }
 

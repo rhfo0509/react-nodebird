@@ -318,7 +318,7 @@ static associate(db) {
 
 ### User-Post 간의 "**좋아요**" 관계(**다대다**)
 
-`as`를 사용해서 테이블의 별칭을 지정할 수 있는데, `post.getLiker()`, `user.getLiked()`와 같이 별칭을 이용해 '게시글에 좋아요를 누른 사람'과 '유저가 좋아요를 누른 게시글'을 조회할 수 있다.
+User와 Post는 "작성" 관계, "좋아요" 관계로 총 2가지 관계를 가지는데, 둘을 구분하기 위해 `as`를 사용하여 테이블의 별칭을 지정할 수 있다. 따라서 좋아요 관계의 경우 `post.getLiker()`, `user.getLiked()`와 같이 별칭을 이용해서 '게시글에 좋아요를 누른 사람'과 '유저가 좋아요를 누른 게시글'을 조회할 수 있다.
 
 ```js
 // models/user.js
@@ -1056,6 +1056,12 @@ json 형식으로 받은 데이터는 result.data로 접근 가능<br>
 ```js
 router.post("/:postId/comment", async (req, res, next) => {
   try {
+    const post = await Post.findOne({
+      where: { id: req.params.postId },
+    });
+    if (!post) {
+      return res.status(403).send('존재하지 않는 게시글입니다.');
+    }
     const comment = await Comment.create({
       content: req.body.content,
       postId: req.body.postId,
@@ -1068,6 +1074,7 @@ router.post("/:postId/comment", async (req, res, next) => {
   }
 });
 ```
+**parameter로 전달받은 데이터는 반드시 존재하는지 검증이 필요하다.**
 
 4. `front/sagas/post.js`
 
@@ -1107,5 +1114,258 @@ axios.defaults.withCredentials = true;
 ### 새로고침할 때마다 로그인이 풀리는 문제
 
 새로고침을 하게 되면 스토어 값이 모두 초기화가 된다. 따라서 `me`가 `null`이 되기 때문에 `UserProfile` 대신 `LoginForm` 컴포넌트가 나타나게 되는 것이다.
+
+메인 페이지 접근 시 `LOAD_MY_INFO_REQUEST`를 dispatch하여 서버로부터 유저 정보를 받아오면 그 정보를 `LOAD_MY_INFO_SUCCESS`와 함께 dispatch해서 `me` 객체에 받아온 유저 정보를 집어넣으면 해결이 가능하다.
+
+### 프론트에서 필요로 하는 데이터만 서버에서 넘겨주기
+
+![image](https://user-images.githubusercontent.com/85874042/235821678-cf6c401e-f30a-4ddf-a73c-7846ef9c07b3.png)
+
+`me.Posts`에 유저가 작성한 게시글 정보 전체를 넘겨주는 것이 의미가 있을까? `UserProfile` 컴포넌트에서 작성 게시글 수만 보여주면 되기 때문에 이 경우 게시글의 id만 받아와도 된다.
+
+```js
+// back/routes/user.js
+
+router.get("/", async (req, res, next) => {
+  try {
+    if (req.user) {
+      const fullUserWithoutPassword = await User.findOne({
+        where: { id: req.user.id },
+        attributes: {
+          exclude: ["password"],
+        },
+        include: [
+          {
+            model: Post,
+            attributes: ["id"],
+          },
+          {
+            model: User,
+            as: "Followings",
+            attributes: ["id"],
+          
+          },
+          {
+            model: User,
+            as: "Followers",
+            attributes: ["id"],
+          },
+        ],
+      });
+      res.status(200).json(fullUserWithoutPassword);
+    } else {
+      res.status(200).json(null);
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+
+팔로잉과 팔로워의 경우도 마찬가지로 유저 정보를 전부 가져올 필요가 없기 때문에 id 값만 가져오도록 한다.
+
+---
+
+## 게시글 로드
+
+게시글 로드 시 더미포스트 대신 실제로 유저가 작성한 글을 가져오도록 한다.
+
+```js
+// front/sagas/post.js
+function loadPostsAPI() {
+  return axios.get("/posts");
+}
+
+function* loadPosts() {
+  try {
+    const result = yield call(loadPostsAPI);
+    yield put({
+      type: LOAD_POSTS_SUCCESS,
+      data: result.data,
+    });
+  } catch (err) {
+    console.error(err);
+    yield put({
+      type: LOAD_POSTS_FAILURE,
+      error: err.response.data,
+    });
+  }
+}
+```
+
+여기서 `/post`가 아닌 `/posts`로 요청을 보내는데, 게시글이나 댓글 작성 같이 **한 번에 한 개**의 데이터 요청만 보내는 경우에는 라우터명을 **단수**로, 게시글 로드와 같이 **한 번에 여러 개**의 데이터 요청을 보내는 경우에는 라우터명을 **복수**로 작성하는 것을 추천한다.
+
+```js
+// back/routes/posts.js
+const express = require("express");
+const { Post, User, Comment, Image } = require("../models");
+
+const router = express.Router();
+
+router.get("/", async (req, res, next) => {
+  try {
+    const posts = await Post.findAll({
+      limit: 10,
+      order: [["createdAt", "DESC"], [Comment, "createdAt", "DESC"]],
+      include: [
+        { model: User, attributes: ["id", "nickname"] },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: Image },
+      ],
+    });
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+module.exports = router;
+```
+order를 통해 게시글과 그 게시글에 작성한 댓글을 최신순으로 정렬할 수 있다.
+이 때 include를 통해 가져오는 유저 정보에는 **비밀번호**가 들어있지 않도록 주의한다.
+
+### 페이지네이션 - limit, offset 방식
+
+게시글 로드 요청 시 한번에 가져오는 게시글의 수를 제한하기 위해 사용
+* limit: 몇 개의 결과만 가져올지
+* offset: 어디서부터 가져올지
+
+예를 들어 `limit: 10, offset: 10`이면 11번째부터 20번째까지의 게시글만 가져오게 된다.
+
+#### 치명적인 단점
+
+현재 게시글 : [최초 로드 -> 20 19 18 17 16 15 14 13 12 11] 10 9 8 7 6 5 4 3 2 1
+
+* 21번째 게시글 추가: 21~12번째 게시글을 건너뛰고 11~2번째 게시글이 로드됨 (11번 중복)
+* 15번째 게시글 삭제: 20~10번째 게시글을 건너뛰고 9~1번째 게시글이 로드됨 (10번 무시)
+
+이렇게 게시글을 로드한 후, 게시글을 추가하거나 삭제하면 이후에 로드 시 offset이 다 꼬여버리게 되는 문제가 발생한다.<br>
+
+### 페이지네이션 대안 - limit, lastId 방식
+
+그래서 보통 이 방식을 사용하지 않고, limit과 **lastId** 방식을 사용한다.<br> 
+현재 로드된 게시글들 중 마지막 게시글의 아이디를 **lastId**로 기억하면 이후에 이 값을 기억하여 **lastId**에 해당하는 게시글 바로 뒤의 게시글들이 로드되는 것이다.
+
+### morgan
+
+요청과 응답에 대한 정보를 콘솔에 기록하는 미들웨어<br>
+개발 환경에서는 `dev`를, 배포 환경에서는 `combined`를 사용한다.
+
+---
+
+## 게시글 좋아요
+
+1. 좋아요 버튼 클릭 -> `LIKE_POST_REQUEST` 액션 dispatch
+
+```js
+// front/components/PostCard.js
+const liked = post.Likers.find((v) => v.id === id);
+
+const onToggleLike = useCallback(() => {
+  if (liked) {
+    dispatch({ type: UNLIKE_POST_REQUEST, data: post.id });
+  } else {
+    dispatch({ type: LIKE_POST_REQUEST, data: post.id });
+  }
+}, [liked]);
+```
+`post.Likers`를 통해 해당 포스트에 좋아요를 누른 유저들을 조회할 수 있음
+
+2. postSaga -> `/post/${data}/like`에 patch 요청
+3. `post.addLikers(req.user.id)`로 Like 테이블 내에서 PostId-UserId 쌍이 생성됨
+
+```js
+// back/routes/post.js
+router.patch("/:postId/like", isLoggedIn, async (req, res, next) => {
+  try {
+    const post = await Post.findOne({
+      where: { id: Number(req.params.postId) },
+    });
+    if (!post) {
+      return res.status(403).send("존재하지 않는 게시글입니다.");
+    }
+    await post.addLikers(req.user.id);
+    res.status(200).json({ PostId: post.id, UserId: req.user.id });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+4. `post.Likers.push({ id: action.data.UserId })`로 리덕스 스토어 상태도 변경한다.
+```js
+// front/reducers/post.js
+case LIKE_POST_SUCCESS: {
+  draft.likePostLoading = false;
+  draft.likePostDone = true;
+  const post = draft.mainPosts.find((v) => v.id === action.data.PostId);
+  console.log(action.data);
+  post.Likers.push({ id: action.data.UserId });
+  break;
+}
+```
+
+5. **`post.Likers`에 접근하기 위해서는 포스트 생성/조회 시에도 미리 `Likers`를 include하는 과정이 필요하다.**
+```js
+// back/routes/post.js
+router.post("/", isLoggedIn, async (req, res, next) => {
+  try {
+    const post = await Post.create({
+      content: req.body.content,
+      UserId: req.user.id,
+    });
+    const fullPost = await Post.findOne({
+      where: { id: post.id },
+      include: [
+        { model: Image },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: User, attributes: ["id", "nickname"] },
+        { model: User, attributes: ["id"], as: "Likers" },
+      ],
+    });
+    res.status(201).json(fullPost);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+```js
+// back/routes/posts.js
+router.get("/", async (req, res, next) => {
+  try {
+    const posts = await Post.findAll({
+      limit: 10,
+      order: [
+        ["createdAt", "DESC"],
+        [Comment, "createdAt", "DESC"],
+      ],
+      include: [
+        { model: User, attributes: ["id", "nickname"] },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: Image },
+        { model: User, attributes: ["id"], as: "Likers" },
+      ],
+    });
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+---
+
 
 

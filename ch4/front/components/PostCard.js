@@ -13,19 +13,28 @@ import { useDispatch, useSelector } from "react-redux";
 import PostImages from "./PostImages";
 import CommentForm from "./CommentForm";
 import PostCardContent from "./PostCardContent";
-import { REMOVE_POST_REQUEST } from "../reducers/post";
+import {
+  REMOVE_POST_REQUEST,
+  LIKE_POST_REQUEST,
+  UNLIKE_POST_REQUEST,
+} from "../reducers/post";
 
 const PostCard = ({ post }) => {
   const dispatch = useDispatch();
   const { me } = useSelector((state) => state.user);
   const { removePostLoading } = useSelector((state) => state.post);
   const id = me?.id;
+  console.log(post);
+  const liked = post.Likers.find((v) => v.id === id);
 
-  const [liked, setLiked] = useState(false);
   const [commentFormOpened, setCommentFormOpened] = useState(false);
   const onToggleLike = useCallback(() => {
-    setLiked((prev) => !prev);
-  }, []);
+    if (liked) {
+      dispatch({ type: UNLIKE_POST_REQUEST, data: post.id });
+    } else {
+      dispatch({ type: LIKE_POST_REQUEST, data: post.id });
+    }
+  }, [liked]);
   const onToggleComment = useCallback(() => {
     setCommentFormOpened((prev) => !prev);
   }, []);
@@ -57,7 +66,11 @@ const PostCard = ({ post }) => {
                 {id && id === post.User.id ? (
                   <>
                     <Button>수정</Button>
-                    <Button type="danger" loading={removePostLoading} onClick={onRemovePost}>
+                    <Button
+                      type="danger"
+                      loading={removePostLoading}
+                      onClick={onRemovePost}
+                    >
                       삭제
                     </Button>
                   </>
@@ -108,7 +121,8 @@ PostCard.propTypes = {
     content: PropTypes.string,
     Images: PropTypes.arrayOf(PropTypes.object),
     Comments: PropTypes.arrayOf(PropTypes.object),
-    createdAt: PropTypes.object,
+    createdAt: PropTypes.string,
+    Likers: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,
 };
 

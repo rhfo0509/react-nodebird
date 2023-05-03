@@ -1,24 +1,24 @@
 import produce from "immer";
 
 export const initialState = {
-  loadMyInfoLoading: false, // 유저 정보 로딩 시도중...
+  loadMyInfoLoading: false, // 유저 정보 가져오기 시도중
   loadMyInfoDone: false,
   loadMyInfoError: null,
-  logInLoading: false, // 로그인 시도중...
+  logInLoading: false, // 로그인 시도중
   logInDone: false,
   logInError: null,
-  logOutLoading: false, // 로그아웃 시도중...
+  logOutLoading: false, // 로그아웃 시도중
   logOutDone: false,
   logOutError: null,
-  signUpLoading: false, // 회원가입 시도중...
+  signUpLoading: false, // 회원가입 시도중
   signUpDone: false,
   signUpError: null,
-  changeNicknameLoading: false, // 닉네임 변경 시도중...
+  changeNicknameLoading: false, // 닉네임 변경 시도중
   changeNicknameDone: false,
   changeNicknameError: null,
   me: null,
-  signUpData: [],
-  loginData: [],
+  signUpData: {},
+  loginData: {},
 };
 
 export const LOAD_MY_INFO_REQUEST = "LOAD_MY_INFO_REQUEST";
@@ -53,48 +53,27 @@ export const UNFOLLOW_FAILURE = "UNFOLLOW_FAILURE";
 export const ADD_POST_TO_ME = "ADD_POST_TO_ME";
 export const REMOVE_POST_OF_ME = "REMOVE_POST_OF_ME";
 
-const dummyUser = (data) => ({
-  ...data,
-  nickname: "bear",
-  id: 1,
-  Posts: [{ id: 1 }],
-  Followings: [
-    { nickname: "zero" },
-    { nickname: "nero" },
-    { nickname: "hero" },
-  ],
-  Followers: [
-    { nickname: "zero" },
-    { nickname: "nero" },
-    { nickname: "hero" }
-  ],
+export const loginRequestAction = (data) => ({
+  type: LOG_IN_REQUEST,
+  data,
 });
 
-export const loginRequestAction = (data) => {
-  return {
-    type: LOG_IN_REQUEST,
-    data,
-  };
-};
-
-export const logoutRequestAction = () => {
-  return {
-    type: LOG_OUT_REQUEST,
-  };
-};
+export const logoutRequestAction = () => ({
+  type: LOG_OUT_REQUEST,
+});
 
 const reducer = (state = initialState, action) => {
   return produce(state, (draft) => {
     switch (action.type) {
       case LOAD_MY_INFO_REQUEST:
         draft.loadMyInfoLoading = true;
-        draft.loadMyInfoDone = false;
         draft.loadMyInfoError = null;
+        draft.loadMyInfoDone = false;
         break;
       case LOAD_MY_INFO_SUCCESS:
         draft.loadMyInfoLoading = false;
-        draft.loadMyInfoDone = true;
         draft.me = action.data;
+        draft.loadMyInfoDone = true;
         break;
       case LOAD_MY_INFO_FAILURE:
         draft.loadMyInfoLoading = false;
@@ -102,13 +81,13 @@ const reducer = (state = initialState, action) => {
         break;
       case LOG_IN_REQUEST:
         draft.logInLoading = true;
-        draft.logInDone = false;
         draft.logInError = null;
+        draft.logInDone = false;
         break;
       case LOG_IN_SUCCESS:
         draft.logInLoading = false;
-        draft.logInDone = true;
         draft.me = action.data;
+        draft.logInDone = true;
         break;
       case LOG_IN_FAILURE:
         draft.logInLoading = false;
@@ -116,8 +95,8 @@ const reducer = (state = initialState, action) => {
         break;
       case LOG_OUT_REQUEST:
         draft.logOutLoading = true;
-        draft.logOutDone = false;
         draft.logOutError = null;
+        draft.logOutDone = false;
         break;
       case LOG_OUT_SUCCESS:
         draft.logOutLoading = false;
@@ -130,8 +109,8 @@ const reducer = (state = initialState, action) => {
         break;
       case SIGN_UP_REQUEST:
         draft.signUpLoading = true;
-        draft.signUpDone = false;
         draft.signUpError = null;
+        draft.signUpDone = false;
         break;
       case SIGN_UP_SUCCESS:
         draft.signUpLoading = false;
@@ -147,8 +126,8 @@ const reducer = (state = initialState, action) => {
         break;
       case CHANGE_NICKNAME_REQUEST:
         draft.changeNicknameLoading = true;
-        draft.changeNicknameDone = false;
         draft.changeNicknameError = null;
+        draft.changeNicknameDone = false;
         break;
       case CHANGE_NICKNAME_SUCCESS:
         draft.changeNicknameLoading = false;
@@ -161,23 +140,23 @@ const reducer = (state = initialState, action) => {
       case ADD_POST_TO_ME:
         draft.me.Posts.unshift({ id: action.data });
         break;
-        // return {
-        //   ...state,
-        //   me: {
-        //     ...state.me,
-        //     Posts: [{ id: action.data }, ...state.me.Posts],
-        //   },
-        // };
+      // return {
+      //   ...state,
+      //   me: {
+      //     ...state.me,
+      //     Posts: [{ id: action.data }, ...state.me.Posts],
+      //   },
+      // };
       case REMOVE_POST_OF_ME:
-        draft.me.Post = draft.me.Post.filter((v) => v.id !== action.data);
+        draft.me.Posts = draft.me.Posts.filter((v) => v.id !== action.data);
         break;
-        // return {
-        //   ...state,
-        //   me: {
-        //     ...state.me,
-        //     Posts: state.me.Posts.filter((v) => v.id !== action.data),
-        //   },
-        // };
+      // return {
+      //   ...state,
+      //   me: {
+      //     ...state.me,
+      //     Posts: state.me.Posts.filter((v) => v.id !== action.data),
+      //   },
+      // };
       default:
         break;
     }
