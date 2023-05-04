@@ -1517,6 +1517,7 @@ app.use("/", express.static(path.join(__dirname, "uploads")));
 * `app.use(요청 경로, express.static(실제 경로))`: 정적 파일 제공
 * 요청 경로: `http://localhost:3000` <-> 실제 경로: `C:/Users/user/Desktop/react-nodebird/ch4/back/uploads`
 * 프론트에서는 서버의 폴더 구조를 파악하기 못해 보안에 도움이 된다.
+* `path.join`을 통해 운영체제에 맞게 경로 구분자를 다룰 수 있다.
 
 ### 업로드한 이미지 제거
 
