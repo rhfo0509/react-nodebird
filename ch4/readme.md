@@ -587,7 +587,7 @@ const signup = () => {
 }
 ```
 
-회원가입 완료 후에는 메인페이지로 이동되도록 하고, 중복된 이메일로 가입하는 경우 `signUpError`에 들어있는 에러메시지가 보이도록 한다.
+회원가입 완료 후에는 메인페이지로 이동되도록 하고, 중복된 이메일로 가입하는 경우 `signUpError`에 들어있는 에러메시지를 보여준다.
 
 ```js
 // front/reducers/user.js
@@ -597,7 +597,7 @@ case SIGN_UP_RESET:
   break;
 ```
 
-가입 후, 또는 오류메시지를 보여준 후에 `SIGN_UP_RESET` 액션을 dispatch해서 `signUpDone`과 `signUpError`를 `false`로 변경해줘야 한다.
+가입 후, 또는 오류메시지를 보여준 후에 `SIGN_UP_RESET` 액션을 dispatch해서 `signUpDone`과 `signUpError`를 `false`로 변경한다.
 
 ---
 
@@ -628,7 +628,7 @@ function* logIn(action) {
 }
 ```
 
-이 때 `signUpAPI`의 백엔드 주소와 `http://localhost:3065` 부분이 겹치기 때문에 `sagas/index.js`에서
+백엔드 주소는 `http://localhost:3065` 부분을 공통적으로 가지기 때문에 `sagas/index.js`에서
 
 `axios.defaults.baseURL = "http://localhost:3065"`를 작성하여 중복을 제거한다.
 
@@ -720,7 +720,7 @@ module.exports = () => {
 
 그리고 두 번째 인수에서 로그인 전략을 세울 수 있는데, 여러 상황에 따라 `done(error, user, options)` 함수에 넣어주는 인수가 달라진다.
 
-* `error` : 서버 측에서 에러가 발생한 경우 error 객체 담아 전송, 나머지 경우는 null
+* `error` : 서버 에러가 발생한 경우 error 객체 담아 전송, 나머지 경우는 null
 * `user` : 로그인이 성공했을 경우에 user 객체 담아 전송, 실패 시 false
 * `options` : 로그인이 실패했을 때 그 이유를 담으려는 경우에 작성
 
@@ -811,7 +811,7 @@ app.use(passport.session());
 
 소스코드가 해커에 의해 노출될 경우 secret 값이 하드코딩되어 있다면 이 secret 값과 전달받은 쿠키를 이용해 데이터를 복원할 수 있기 때문에 secret 값을 다른 파일로 옮겨서 관리할 필요가 있다.
 
-`dotenv` 모듈 설치 후 `.env` 파일에 키값을 저장한 후 `dotenv.config()`를 하면 `.env` 내 키값에 접근이 가능해진다. 이제 이 `.env` 파일만 잘 관리하면 되기 때문에 유지보수가 훨씬 간편해질 것이다.
+`dotenv` 모듈 설치 후 `.env` 파일에 키값을 저장한 다음 `dotenv.config()`를 하면 `.env` 내 키값에 접근이 가능해진다. 이제 이 `.env` 파일만 잘 관리하면 되기 때문에 유지보수가 훨씬 간편해질 것이다.
 
 ### 로그인 과정
 
@@ -996,7 +996,7 @@ exports.isNotLoggedIn = (req, res, next) => {
 }
 ```
 
-로그아웃 요청을 받은 경우 로그인된 사용자인 경우(`isLoggedIn`)에만 `next()` 메서드에 의해 다음 미들웨어가 호출되고, 만약 아니라면 프론트에게 "로그인이 필요합니다."라는 메시지만 전달되고 다음 미들웨어는 호출되지 않는다.
+로그아웃 요청을 받은 경우, 로그인된 경우(`isLoggedIn`)에만 `next()` 메서드에 의해 다음 미들웨어가 호출되고, 만약 아니라면 프론트에게 "로그인이 필요합니다."라는 메시지만 전달되고 다음 미들웨어는 호출되지 않는다.
 * `next()`: 다음 미들웨어 호출
 * `next(error)`: 에러처리 미들웨어 호출
 
@@ -1034,12 +1034,12 @@ router.post("/", async (req, res, next) => {
 
 4. `front/sagas/post.js`
 
-json 형식으로 받은 데이터는 result.data로 접근 가능<br>
+json 형식으로 받은 데이터는 **result.data**로 접근 가능<br>
 `{ type: ADD_POST_SUCCESS, data: result.data }` + `{ type: ADD_POST_TO_ME, data: result.data.id }`를 dispatch
 
 5. `front/reducers/post.js`
 
-`draft.mainPosts.unshift(action.data)`로 최상단에 게시글 추가
+`draft.mainPosts.unshift(action.data)`로 최상단에 게시글 추가 및 작성 글 수 1 증가를 위해 `draft.me.Posts.unshift({ id: action.data })`로 내가 작성한 글 추가
 
 ### 댓글 작성 로직
 
@@ -1078,12 +1078,12 @@ router.post("/:postId/comment", async (req, res, next) => {
 
 4. `front/sagas/post.js`
 
-json 형식으로 받은 데이터는 result.data로 접근 가능<br>
+json 형식으로 받은 데이터는 **result.data**로 접근 가능<br>
 `{ type: ADD_COMMENT_SUCCESS, data: result.data }`를 dispatch
 
 5. `front/reducers/post.js`
 
-`post.Comments.unshift(action.data);`로 작성한 게시글의 최상단에 댓글 추가
+`post.Comments.unshift(action.data);`로 작성한 게시글의 댓글 목록 최상단에 댓글 추가
 
 ---
 
@@ -1091,7 +1091,7 @@ json 형식으로 받은 데이터는 result.data로 접근 가능<br>
 
 ### `req.user` 값을 받아올 수 없는 문제
 
-백엔드 서버와 브라우저 간의 **origin**이 다른 경우에, CORS 문제가 발생할 뿐만 아니라 쿠키 또한 전송이 되지 않는다.
+백엔드 서버와 브라우저 간의 **origin**이 다른 경우에, CORS 문제가 발생할 뿐만 아니라 쿠키 또한 전송이 되지 않는 문제가 발생한다.
 
 ### 설정
 
@@ -1163,7 +1163,7 @@ router.get("/", async (req, res, next) => {
 });
 ```
 
-팔로잉과 팔로워의 경우도 마찬가지로 유저 정보를 전부 가져올 필요가 없기 때문에 id 값만 가져오도록 한다.
+이후에 구현할 팔로잉과 팔로워의 경우도 마찬가지로 유저 정보를 전부 가져올 필요가 없기 때문에 id 값만 가져오도록 한다.
 
 ---
 
@@ -1241,14 +1241,14 @@ order를 통해 게시글과 그 게시글에 작성한 댓글을 최신순으�
 
 현재 게시글 : [최초 로드 -> 20 19 18 17 16 15 14 13 12 11] 10 9 8 7 6 5 4 3 2 1
 
-* 21번째 게시글 추가: 21~12번째 게시글을 건너뛰고 11~2번째 게시글이 로드됨 (11번 중복)
-* 15번째 게시글 삭제: 20~10번째 게시글을 건너뛰고 9~1번째 게시글이 로드됨 (10번 무시)
+* 21번째 게시글 추가: 21\~12번째 게시글을 건너뛰고 11\~2번째 게시글이 로드됨 (11번 중복)
+* 15번째 게시글 삭제: 20\~10번째 게시글을 건너뛰고 9\~1번째 게시글이 로드됨 (10번 무시)
 
 이렇게 게시글을 로드한 후, 게시글을 추가하거나 삭제하면 이후에 로드 시 offset이 다 꼬여버리게 되는 문제가 발생한다.<br>
 
-### 페이지네이션 대안 - limit, lastId 방식
+### 페이지네이션 - limit, lastId 방식
 
-그래서 보통 이 방식을 사용하지 않고, limit과 **lastId** 방식을 사용한다.<br> 
+그래서 보통 위 방식을 사용하는 대신 limit과 **lastId** 방식을 많이 사용한다.<br> 
 현재 로드된 게시글들 중 마지막 게시글의 아이디를 **lastId**로 기억하면 이후에 이 값을 기억하여 **lastId**에 해당하는 게시글 바로 뒤의 게시글들이 로드되는 것이다.
 
 ### morgan
@@ -1277,7 +1277,7 @@ const onToggleLike = useCallback(() => {
 `post.Likers`를 통해 해당 포스트에 좋아요를 누른 유저들을 조회할 수 있음
 
 2. postSaga -> `/post/${data}/like`에 patch 요청
-3. `post.addLikers(req.user.id)`로 Like 테이블 내에서 PostId-UserId 쌍이 생성됨
+3. **`post.addLikers(req.user.id)`로 Like 테이블 내에서 PostId-UserId 쌍이 생성됨**
 
 ```js
 // back/routes/post.js
@@ -1304,7 +1304,6 @@ case LIKE_POST_SUCCESS: {
   draft.likePostLoading = false;
   draft.likePostDone = true;
   const post = draft.mainPosts.find((v) => v.id === action.data.PostId);
-  console.log(action.data);
   post.Likers.push({ id: action.data.UserId });
   break;
 }
@@ -1365,7 +1364,161 @@ router.get("/", async (req, res, next) => {
   }
 });
 ```
+
+* **게시글 제거** / **닉네임 변경** / **팔로우** / **언팔로우** 또한 위에서 설명한 로직이 계속해서 반복되기 때문에 쉽게 구현할 수 있다. 
+* 사전에 더미데이터를 통해 미리 프론트 측에서 틀을 짜놓으면 이후에 실제 데이터를 이용하는 경우에도 이를 그대로 활용할 수 있다는 장점이 있다.
+
 ---
 
+## 이미지 업로드를 위한 multer
 
+파일 및 이미지 업로드 시 **`multipart/form-data`** 형식으로 전송됨<br>
+그러나 백엔드에 있는 `express.json()` 및 `express.urlencoded()` 미들웨어는 JSON 및 일반 폼 데이터만 받을 수 있기 때문에 multipart 형식을 처리할 수 있다.
+
+### 설치
+
+`npm i multer`
+
+multer 모듈을 설치하게 되면 multipart 형식으로 된 폼 데이터를 받을 수 있다.
+
+### 설정
+
+1. upload 객체 생성
+
+`multipart/form-data` 형식으로 업로드된 이미지를 처리하는 미들웨어를 생성하는 여러 가지 방법(**single / array / fields / none**)을 제공한다.
+
+```js
+// back/routes/post.js
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+
+try {
+  fs.accessSync("uploads");
+} catch (error) {
+  console.log("uploads 폴더가 없으므로 생성합니다.");
+  fs.mkdirSync("uploads");
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination(req, file, done) {
+      done(null, "uploads");
+    },
+    filename(req, file, done) {
+      // bear.png
+      const ext = path.extname(file.originalname); // .png
+      const basename = path.basename(file.originalname, ext); // bear
+      done(null, basename + "_" + Date.now() + ext); // bear_1683178580347.png
+    },
+  }),
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
+```
+* `diskStorage`의 경우 실제 하드디스크에 저장되며, `memoryStorage`의 경우 Amazon S3와 같은 클라우드 스토리지에 저장할 때 사용한다.
+
+* `destination`: 파일이 저장되는 경로 설정 -> uploads 폴더가 존재하지 않는 경우 에러가 발생하므로 fs 모듈을 이용해 폴더가 없을 경우 새로 생성해준다.
+
+* `filename`: 파일명이 중복되는 경우 새 파일이 기존 파일을 덮어씌운다. 이를 방지하기 위해 파일명을 timestamp로 설정한다.
+
+2. 이미지 선택 완료 시 formData와 함께 `UPLOAD_IMAGES_REQUEST` 액션 dispatch
+
+```js
+// front/components/PostForm.js
+const onChangeImages = useCallback((e) => {
+    console.log("images", e.target.files);
+    const imageFormData = new FormData();
+    [...e.target.files].forEach((f) => {
+      imageFormData.append("image", f);
+    });
+    dispatch({ type: UPLOAD_IMAGES_REQUEST, data: imageFormData });
+  }, []);
+```
+
+`<input type="file">` -> `e.target.files`로 파일에 대한 정보를 얻을 수 있다.<br>
+선택된 파일을 formData에 append할 때는 반드시 키 이름이 `upload.array("image")` 부분의 "image"와 같아야 서버 측에서 파악이 가능하다.
+
+3. 라우터에 multer 미들웨어 장착
+
+multer의 경우 폼마다 전송되는 데이터의 형식이 다르기 때문에 공통으로 적용하는 것이 아닌 각 라우터별로 설정을 따로 적용하여 장착하도록 한다.
+
+```js
+// back/routes/post.js
+router.post("/images", isLoggedIn, upload.array("image"), async (req, res, next) => {
+  try {
+    console.log(req.files);
+    res.status(200).json(req.files.map((v) => v.filename));
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+})
+```
+
+`upload.array("image")` 미들웨어를 거치면 imageFormData 내에 있는 파일들이 백엔드 서버에 업로드되고, 각 파일들을 담은 `req` 객체가 다음 미들웨어로 전달된다. 그러면 `req.files`를 통해 파일들의 정보를 조회할 수 있게 된다.
+
+4. `UPLOAD_IMAGES_SUCCESS` 액션이 dispatch면 `imagePaths`에 파일명이 들어있는 배열이 들어감
+
+### 업로드 방식
+
+1. 폼 전송 시 content와 image를 한 번에 전송
+
+단점: 이미지 미리보기, 리사이징 설정한 후에 게시글이 업로드되기 때문에 시간이 많이 소요됨
+
+2. 이미지 선택 시 image 우선 전송 -> 서버로부터 파일 이름을 전달받음 -> 전달받은 정보를 통해 이미지 미리보기, 리사이징 설정 -> 이후에 폼 전송 시 content만 전송
+
+단점: 유저가 이미지 업로드 후 게시글을 전송을 하지 않는 경우, 이미지가 서버에 그대로 남게 됨 -> 이미지를 자산으로 활용하기도 함
+
+---
+
+## express.static 미들웨어
+
+### 이미지 미리보기가 안되는 현상
+
+![image](https://user-images.githubusercontent.com/85874042/236146576-895efc3d-f5e8-4eaf-a550-c821491e58ca.png)
+
+![image](https://user-images.githubusercontent.com/85874042/236136081-ee9974eb-7f4f-4f8d-b1e4-3264126500ec.png)
+
+이미지는 백엔드 서버에 등록되어있기 때문에 `localhost:3000`이 아닌 `localhost:3065`로 접근해야 이미지를 불러올 수 있다.
+
+### 설정
+
+#### front
+
+```js
+// front/components/PostForm.js
+{imagePaths.map((v) => (
+  <div key={v} style={{ display: "inline-block" }}>
+    <img src={`http://localhost:3065/${v}`} style={{ width: "200px" }} alt={v} />
+    <div>
+      <Button>제거</Button>
+    </div>
+  </div>
+))}
+```
+```js
+// front/component/ImagesZoom/index.js
+{images.map((v) => (
+  <ImgWrapper key={v.src}>
+    <img src={`http://localhost:3065/${v.src}`} alt={v.src} />
+  </ImgWrapper>
+))}
+```
+
+#### back
+
+uploads 폴더를 front에 접근할 수 있도록 하기 위해 `app.js`에 `express.static()` 미들웨어를 적용한다.
+
+```js
+// back/app.js
+app.use("/", express.static(path.join(__dirname, "uploads")));
+```
+
+* `app.use(요청 경로, express.static(실제 경로))`: 정적 파일 제공
+* 요청 경로: `http://localhost:3000` <-> 실제 경로: `C:/Users/user/Desktop/react-nodebird/ch4/back/uploads`
+* 프론트에서는 서버의 폴더 구조를 파악하기 못해 보안에 도움이 된다.
+
+### 업로드한 이미지 제거
+
+### 게시글 업로드 시 이미지 경로도 서버에 전달
 
