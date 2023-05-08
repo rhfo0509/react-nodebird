@@ -362,7 +362,7 @@ static associate(db) {
 
 > 같은 모델 간의 관계가 다대다를 갖는 경우, 반드시 `foreignKey`가 필요한데, 테이블 두 개가 서로 같기 때문에 중간 테이블의 두 컬럼이 서로 중복된 이름을 가지기 때문이다.
 
-> 별칭으로 지정한 `Followers` 테이블의 경우 `foreignKey` 값으로 `FollowingId`가 들어있어야 하고, `Followings` 테이블의 경우 `foreignKey` 값으로 `FollowerId`가 들어있어야 한다. 
+> 별칭으로 지정한 `Followers` 테이블의 경우 `foreignKey` 값으로 `FollowingId`가 들어있어야 하고, `Followings` 테이블의 경우 `foreignKey` 값으로 `FollowerId`가 들어있어야 한다.
 
 ### Post-Post 간의 "**리트윗**" 관계
 
@@ -468,6 +468,7 @@ function* signUp(action) {
   }
 }
 ```
+
 post 요청을 보낼 백엔드 서버의 위치는 `http://localhost:3065/user`이다.
 
 2. API 요청을 받을 `userRouter` 생성
@@ -507,6 +508,7 @@ router.post("/", async (req, res, next) => {
 
 module.exports = router;
 ```
+
 _403_(forbidden), _201_(created)와 같이 status code를 작성해주는 것이 좋다.<br>
 `bcrypt.hash`의 라운드 수는 10~13 사이로 설정한다.
 
@@ -720,9 +722,9 @@ module.exports = () => {
 
 그리고 두 번째 인수에서 로그인 전략을 세울 수 있는데, 여러 상황에 따라 `done(error, user, options)` 함수에 넣어주는 인수가 달라진다.
 
-* `error` : 서버 에러가 발생한 경우 error 객체 담아 전송, 나머지 경우는 null
-* `user` : 로그인이 성공했을 경우에 user 객체 담아 전송, 실패 시 false
-* `options` : 로그인이 실패했을 때 그 이유를 담으려는 경우에 작성
+- `error` : 서버 에러가 발생한 경우 error 객체 담아 전송, 나머지 경우는 null
+- `user` : 로그인이 성공했을 경우에 user 객체 담아 전송, 실패 시 false
+- `options` : 로그인이 실패했을 때 그 이유를 담으려는 경우에 작성
 
 이메일이 있는지를 먼저 찾음<br>
 -> 존재하지 않는 경우 `done(null, false, { message: "존재하지 않는 이메일입니다." })` 호출<br>
@@ -732,6 +734,7 @@ module.exports = () => {
 -> 도중에 서버 에러가 발생할 경우 `done(error)` 호출
 
 로그인 요청이 들어오면 `passport.authenticate("local")`를 통해 로그인 전략이 수행되고, 이후 호출되는 `done` 함수는 `passport.authenticate`의 두 번째 인수인 callback으로 들어가게 된다.
+
 ```js
 // back/routes/user.js
 ...
@@ -759,9 +762,10 @@ router.post(
 );
 ...
 ```
-* `passport.authenticate` 메서드는 req, res, next를 인수로 받지 않기 때문에 **미들웨어 확장법**을 이용해서 req, res, next에 접근할 수 있도록 할 수 있다.
 
-* `req.login` 메서드는 로그인 성공 시 `passport.authenticate`에 의해 자동으로 호출되며, `req.login`에 의해 `passport.serializeUser`가 호출되어 세션 객체에 로그인한 유저 정보가 저장된다. (후술)
+- `passport.authenticate` 메서드는 req, res, next를 인수로 받지 않기 때문에 **미들웨어 확장법**을 이용해서 req, res, next에 접근할 수 있도록 할 수 있다.
+
+- `req.login` 메서드는 로그인 성공 시 `passport.authenticate`에 의해 자동으로 호출되며, `req.login`에 의해 `passport.serializeUser`가 호출되어 세션 객체에 로그인한 유저 정보가 저장된다. (후술)
 
 ---
 
@@ -769,7 +773,7 @@ router.post(
 
 ### 쿠키/세션
 
-서버에 로그인한 유저 정보가 저장된다고 해서 브라우저에 똑같이 반영되지 않기 때문에 유저 정보를 브라우저로 넘겨주는 과정이 필요하다. 
+서버에 로그인한 유저 정보가 저장된다고 해서 브라우저에 똑같이 반영되지 않기 때문에 유저 정보를 브라우저로 넘겨주는 과정이 필요하다.
 
 이 때 **쿠키**와 **세션**이 사용되는데, 사용자 정보는 서버의 **세션** 객체에 저장되고 브라우저에는 세션 객체를 조회할 수 있는 **쿠키**가 전달된다.
 
@@ -789,21 +793,23 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 app.use(cookieParser(process.env.COOKIE_SECRET));
-app.use(session({
-  saveUninitialized: false,
-  resave: false,
-  secret: process.env.COOKIE_SECRET,
-}));
+app.use(
+  session({
+    saveUninitialized: false,
+    resave: false,
+    secret: process.env.COOKIE_SECRET,
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 ```
 
-* `passport.initialize`: `req`에 `isAuthenticated`, `login`, `logout` 메서드와 같은 passport 설정을 심음
-* `passport.session` : `req.session` 객체에 사용자 정보를 저장하는 역할, 반드시 `express-session`을 사용하는 미들웨어 다음에 위치해야 함
+- `passport.initialize`: `req`에 `isAuthenticated`, `login`, `logout` 메서드와 같은 passport 설정을 심음
+- `passport.session` : `req.session` 객체에 사용자 정보를 저장하는 역할, 반드시 `express-session`을 사용하는 미들웨어 다음에 위치해야 함
 
 #### dotenv
 
-`req.login`가 성공적으로 수행되면 
+`req.login`가 성공적으로 수행되면
 
 ![image](https://user-images.githubusercontent.com/85874042/235393730-87fc30b2-bbc7-4859-8263-e2c786c2d7ff.png)
 
@@ -846,9 +852,10 @@ module.exports = () => {
   local();
 };
 ```
+
 6. `done(null, user.id)`이 실행되면 세션(`req.session`) 객체에는 사용자 id 값만 저장됨(**메모리 최적화**를 위해)
 7. `done` 실행 후 `req.login`의 callback 함수가 실행되어 프론트에 쿠키와 유저 정보 넘겨준 후 서버 로직이 종료됨
-9. 프론트에서는 userSaga에서 넘겨받은 유저 정보와 함께 `LOG_IN_SUCCESS`를 dispatch한 다음 userReducer를 통해 `me` 객체에 유저 정보를 넣어준다. (끝)
+8. 프론트에서는 userSaga에서 넘겨받은 유저 정보와 함께 `LOG_IN_SUCCESS`를 dispatch한 다음 userReducer를 통해 `me` 객체에 유저 정보를 넣어준다. (끝)
 
 ### 로그인 이후 과정
 
@@ -877,7 +884,8 @@ router.post("/logout", isLoggedIn, (req, res) => {
 });
 ...
 ```
-로그아웃 요청이 들어오면 `req.session.destroy` 메서드로 세션 파괴 및 `res.clearCookie`로 쿠키를 삭제한다. 
+
+로그아웃 요청이 들어오면 `req.session.destroy` 메서드로 세션 파괴 및 `res.clearCookie`로 쿠키를 삭제한다.
 
 ## 로그인 문제 해결하기
 
@@ -930,6 +938,7 @@ router.post("/login", (req, res, next) => {
   })(req, res, next);
 });
 ```
+
 따라서 `include`를 통해 관계있는 테이블을 조인함과 동시에 `attributes`의 `exclude`로 비밀번호 속성은 제외하고 가져올 수 있도록 한다.
 
 ![image](https://user-images.githubusercontent.com/85874042/235411652-e8cf1730-dfe9-4e5d-9d92-913f18baa785.png)
@@ -952,6 +961,7 @@ const LoginForm = () => {
 ```
 
 ### 로그인이 되어 있는 동안 회원가입 페이지 접근 차단
+
 ```js
 // front/pages/signup.js
 const signup = () => {
@@ -964,10 +974,12 @@ const signup = () => {
       Router.replace("/");
     }
   }, [logInDone]);
-}
+};
 ```
-* `Router.replace`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지(`/`) -> **뒤로가기** -> 홈
-* `Router.push`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지(`/`) -> **뒤로가기** -> 회원가입 페이지
+
+- `Router.replace`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지(`/`) -> **뒤로가기** -> 홈
+- `Router.push`의 경우: 홈 -> 회원가입 페이지 -> 리다이렉트 페이지(`/`) -> **뒤로가기** -> 회원가입 페이지
+
 ---
 
 ## 미들웨어로 라우터 검사하기
@@ -985,7 +997,7 @@ exports.isLoggedIn = (req, res, next) => {
   } else {
     res.status(401).send("로그인이 필요합니다.");
   }
-}
+};
 
 exports.isNotLoggedIn = (req, res, next) => {
   if (!req.isAuthenticated()) {
@@ -993,12 +1005,13 @@ exports.isNotLoggedIn = (req, res, next) => {
   } else {
     res.status(401).send("로그인하지 않은 사용자만 접근이 가능합니다.");
   }
-}
+};
 ```
 
 로그아웃 요청을 받은 경우, 로그인된 경우(`isLoggedIn`)에만 `next()` 메서드에 의해 다음 미들웨어가 호출되고, 만약 아니라면 프론트에게 "로그인이 필요합니다."라는 메시지만 전달되고 다음 미들웨어는 호출되지 않는다.
-* `next()`: 다음 미들웨어 호출
-* `next(error)`: 에러처리 미들웨어 호출
+
+- `next()`: 다음 미들웨어 호출
+- `next(error)`: 에러처리 미들웨어 호출
 
 ---
 
@@ -1007,6 +1020,7 @@ exports.isNotLoggedIn = (req, res, next) => {
 `dummyPost`, `dummyComment` 대신 실제로 유저가 작성한 게시글과 댓글을 DB에 저장한다.
 
 ### 게시글 작성 로직
+
 1. `front/components/PostForm.js`
 
 `dispatch({ type: ADD_POST_REQUEST, data: text })`
@@ -1049,7 +1063,7 @@ json 형식으로 받은 데이터는 **result.data**로 접근 가능<br>
 
 2. `front/sagas/post.js`
 
-``axios.post(`/post/${data.postId}/comment`, data)``
+`` axios.post(`/post/${data.postId}/comment`, data) ``
 
 3. `back/routes/post.js`
 
@@ -1060,7 +1074,7 @@ router.post("/:postId/comment", async (req, res, next) => {
       where: { id: req.params.postId },
     });
     if (!post) {
-      return res.status(403).send('존재하지 않는 게시글입니다.');
+      return res.status(403).send("존재하지 않는 게시글입니다.");
     }
     const comment = await Comment.create({
       content: req.body.content,
@@ -1074,6 +1088,7 @@ router.post("/:postId/comment", async (req, res, next) => {
   }
 });
 ```
+
 **parameter로 전달받은 데이터는 반드시 존재하는지 검증이 필요하다.**
 
 4. `front/sagas/post.js`
@@ -1099,12 +1114,14 @@ json 형식으로 받은 데이터는 **result.data**로 접근 가능<br>
 // back/app.js
 app.use(cors({ origin: true, credentials: true }));
 ```
+
 credentials를 `true`로 설정 -> 이 때 CORS policy에 의해 origin에는 wildcard가 아닌 반드시 주소를 명시적으로 적어줘야 한다. (`true`도 가능)
 
 ```js
 // front/sagas/index.js
 axios.defaults.withCredentials = true;
 ```
+
 프론트에서도 똑같이 withCredential을 `true`로 설정하게 되면 쿠키 전송이 가능해진다.
 
 ---
@@ -1143,7 +1160,6 @@ router.get("/", async (req, res, next) => {
             model: User,
             as: "Followings",
             attributes: ["id"],
-          
           },
           {
             model: User,
@@ -1207,7 +1223,10 @@ router.get("/", async (req, res, next) => {
   try {
     const posts = await Post.findAll({
       limit: 10,
-      order: [["createdAt", "DESC"], [Comment, "createdAt", "DESC"]],
+      order: [
+        ["createdAt", "DESC"],
+        [Comment, "createdAt", "DESC"],
+      ],
       include: [
         { model: User, attributes: ["id", "nickname"] },
         {
@@ -1226,14 +1245,16 @@ router.get("/", async (req, res, next) => {
 
 module.exports = router;
 ```
+
 order를 통해 게시글과 그 게시글에 작성한 댓글을 최신순으로 정렬할 수 있다.
 이 때 include를 통해 가져오는 유저 정보에는 **비밀번호**가 들어있지 않도록 주의한다.
 
 ### 페이지네이션 - limit, offset 방식
 
 게시글 로드 요청 시 한번에 가져오는 게시글의 수를 제한하기 위해 사용
-* limit: 몇 개의 결과만 가져올지
-* offset: 어디서부터 가져올지
+
+- limit: 몇 개의 결과만 가져올지
+- offset: 어디서부터 가져올지
 
 예를 들어 `limit: 10, offset: 10`이면 11번째부터 20번째까지의 게시글만 가져오게 된다.
 
@@ -1241,14 +1262,14 @@ order를 통해 게시글과 그 게시글에 작성한 댓글을 최신순으�
 
 현재 게시글 : [최초 로드 -> 20 19 18 17 16 15 14 13 12 11] 10 9 8 7 6 5 4 3 2 1
 
-* 21번째 게시글 추가: 21\~12번째 게시글을 건너뛰고 11\~2번째 게시글이 로드됨 (11번 중복)
-* 15번째 게시글 삭제: 20\~10번째 게시글을 건너뛰고 9\~1번째 게시글이 로드됨 (10번 무시)
+- 21번째 게시글 추가: 21\~12번째 게시글을 건너뛰고 11\~2번째 게시글이 로드됨 (11번 중복)
+- 15번째 게시글 삭제: 20\~10번째 게시글을 건너뛰고 9\~1번째 게시글이 로드됨 (10번 무시)
 
 이렇게 게시글을 로드한 후, 게시글을 추가하거나 삭제하면 이후에 로드 시 offset이 다 꼬여버리게 되는 문제가 발생한다.<br>
 
 ### 페이지네이션 - limit, lastId 방식
 
-그래서 보통 위 방식을 사용하는 대신 limit과 **lastId** 방식을 많이 사용한다.<br> 
+그래서 보통 위 방식을 사용하는 대신 limit과 **lastId** 방식을 많이 사용한다.<br>
 현재 로드된 게시글들 중 마지막 게시글의 아이디를 **lastId**로 기억하면 이후에 이 값을 기억하여 **lastId**에 해당하는 게시글 바로 뒤의 게시글들이 로드되는 것이다.
 
 ### morgan
@@ -1274,6 +1295,7 @@ const onToggleLike = useCallback(() => {
   }
 }, [liked]);
 ```
+
 `post.Likers`를 통해 해당 포스트에 좋아요를 누른 유저들을 조회할 수 있음
 
 2. postSaga -> `/post/${data}/like`에 patch 요청
@@ -1297,7 +1319,9 @@ router.patch("/:postId/like", isLoggedIn, async (req, res, next) => {
   }
 });
 ```
+
 4. `post.Likers.push({ id: action.data.UserId })`로 리덕스 스토어 상태도 변경한다.
+
 ```js
 // front/reducers/post.js
 case LIKE_POST_SUCCESS: {
@@ -1310,6 +1334,7 @@ case LIKE_POST_SUCCESS: {
 ```
 
 5. **`post.Likers`에 접근하기 위해서는 포스트 생성/조회 시에도 미리 `Likers`를 include하는 과정이 필요하다.**
+
 ```js
 // back/routes/post.js
 router.post("/", isLoggedIn, async (req, res, next) => {
@@ -1337,6 +1362,7 @@ router.post("/", isLoggedIn, async (req, res, next) => {
   }
 });
 ```
+
 ```js
 // back/routes/posts.js
 router.get("/", async (req, res, next) => {
@@ -1365,8 +1391,8 @@ router.get("/", async (req, res, next) => {
 });
 ```
 
-* **게시글 제거** / **닉네임 변경** / **팔로우** / **언팔로우** 또한 위에서 설명한 로직이 계속해서 반복되기 때문에 쉽게 구현할 수 있다. 
-* 사전에 더미데이터를 통해 미리 프론트 측에서 틀을 짜놓으면 이후에 실제 데이터를 이용하는 경우에도 이를 그대로 활용할 수 있다는 장점이 있다.
+- **게시글 제거** / **닉네임 변경** / **팔로우** / **언팔로우** 또한 위에서 설명한 로직이 계속해서 반복되기 때문에 쉽게 구현할 수 있다.
+- 사전에 더미데이터를 통해 미리 프론트 측에서 틀을 짜놓으면 이후에 실제 데이터를 이용하는 경우에도 이를 그대로 활용할 수 있다는 장점이 있다.
 
 ---
 
@@ -1415,57 +1441,63 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 },
 });
 ```
-* `diskStorage`의 경우 실제 하드디스크에 저장되며, `memoryStorage`의 경우 Amazon S3와 같은 클라우드 스토리지에 저장할 때 사용한다.
 
-* `destination`: 파일이 저장되는 경로 설정 -> uploads 폴더가 존재하지 않는 경우 에러가 발생하므로 fs 모듈을 이용해 폴더가 없을 경우 새로 생성해준다.
+- `diskStorage`의 경우 실제 하드디스크에 저장되며, `memoryStorage`의 경우 Amazon S3와 같은 클라우드 스토리지에 저장할 때 사용한다.
 
-* `filename`: 파일명이 중복되는 경우 새 파일이 기존 파일을 덮어씌운다. 이를 방지하기 위해 파일명을 timestamp로 설정한다.
+- `destination`: 파일이 저장되는 경로 설정 -> uploads 폴더가 존재하지 않는 경우 에러가 발생하므로 fs 모듈을 이용해 폴더가 없을 경우 새로 생성해준다.
+
+- `filename`: 파일명이 중복되는 경우 새 파일이 기존 파일을 덮어씌운다. 이를 방지하기 위해 파일명을 timestamp로 설정한다.
 
 2. 이미지 선택 완료 시 formData와 함께 `UPLOAD_IMAGES_REQUEST` 액션 dispatch
 
 ```js
 // front/components/PostForm.js
 const onChangeImages = useCallback((e) => {
-    console.log("images", e.target.files);
-    const imageFormData = new FormData();
-    [...e.target.files].forEach((f) => {
-      imageFormData.append("image", f);
-    });
-    dispatch({ type: UPLOAD_IMAGES_REQUEST, data: imageFormData });
-  }, []);
+  console.log("images", e.target.files);
+  const formData = new FormData();
+  [...e.target.files].forEach((f) => {
+    formData.append("image", f);
+  });
+  dispatch({ type: UPLOAD_IMAGES_REQUEST, data: formData });
+}, []);
 ```
 
 `<input type="file">` -> `e.target.files`로 파일에 대한 정보를 얻을 수 있다.<br>
-선택된 파일을 formData에 append할 때는 반드시 키 이름이 `upload.array("image")` 부분의 "image"와 같아야 서버 측에서 파악이 가능하다.
+선택된 파일을 formData에 append할 때는 반드시 키 이름이 `upload.array("image")`의 "image" 부분과 같아야 서버 측에서 파악이 가능하다.
 
 3. 라우터에 multer 미들웨어 장착
 
-multer의 경우 폼마다 전송되는 데이터의 형식이 다르기 때문에 공통으로 적용하는 것이 아닌 각 라우터별로 설정을 따로 적용하여 장착하도록 한다.
+multer의 경우 폼마다 전송되는 데이터의 형식이 다르기 때문에 공통으로 적용하는 것이 아닌 **각 라우터별**로 설정을 따로 적용하여 장착하도록 한다.
 
 ```js
 // back/routes/post.js
-router.post("/images", isLoggedIn, upload.array("image"), async (req, res, next) => {
-  try {
-    console.log(req.files);
-    res.status(200).json(req.files.map((v) => v.filename));
-  } catch (error) {
-    console.error(error);
-    next(error);
+router.post(
+  "/images",
+  isLoggedIn,
+  upload.array("image"),
+  async (req, res, next) => {
+    try {
+      console.log(req.files);
+      res.status(200).json(req.files.map((v) => v.filename));
+    } catch (error) {
+      console.error(error);
+      next(error);
+    }
   }
-})
+);
 ```
 
-`upload.array("image")` 미들웨어를 거치면 imageFormData 내에 있는 파일들이 백엔드 서버에 업로드되고, 각 파일들을 담은 `req` 객체가 다음 미들웨어로 전달된다. 그러면 `req.files`를 통해 파일들의 정보를 조회할 수 있게 된다.
+`upload.array("image")` 미들웨어를 거치면 formData에 있는 파일들이 백엔드 서버에 저장되고, 각 파일들의 정보를 담은 `req` 객체가 다음 미들웨어로 전달된다. 파일들의 정보는 `req.files`를 통해 조회가 가능하다.
 
-4. `UPLOAD_IMAGES_SUCCESS` 액션이 dispatch면 `imagePaths`에 파일명이 들어있는 배열이 들어감
+4. `UPLOAD_IMAGES_SUCCESS` 액션이 dispatch되면 `imagePaths`에 파일명이 들어있는 배열이 들어감
 
 ### 업로드 방식
 
-1. 폼 전송 시 content와 image를 한 번에 전송
+1. 게시글 폼 전송 시 content와 image를 한 번에 전송
 
-단점: 이미지 미리보기, 리사이징 설정한 후에 게시글이 업로드되기 때문에 시간이 많이 소요됨
+단점: 이미지 미리보기, 리사이징 설정 이후에 게시글이 업로드되기 때문에 시간이 많이 소요됨
 
-2. 이미지 선택 시 image 우선 전송 -> 서버로부터 파일 이름을 전달받음 -> 전달받은 정보를 통해 이미지 미리보기, 리사이징 설정 -> 이후에 폼 전송 시 content만 전송
+2. 이미지 선택 시 image 우선 전송 -> 서버로부터 파일 이름을 전달받음 -> 전달받은 정보를 통해 이미지 미리보기, 리사이징 설정 -> 이후에 게시글 폼 전송 시 content만 전송
 
 단점: 유저가 이미지 업로드 후 게시글을 전송을 하지 않는 경우, 이미지가 서버에 그대로 남게 됨 -> 이미지를 자산으로 활용하기도 함
 
@@ -1487,23 +1519,23 @@ router.post("/images", isLoggedIn, upload.array("image"), async (req, res, next)
 
 ```js
 // front/components/PostForm.js
-{imagePaths.map((v) => (
-  <div key={v} style={{ display: "inline-block" }}>
-    <img src={`http://localhost:3065/${v}`} style={{ width: "200px" }} alt={v} />
-    <div>
-      <Button>제거</Button>
+{
+  imagePaths.map((v) => (
+    <div key={v} style={{ display: "inline-block" }}>
+      <img
+        src={`http://localhost:3065/${v}`}
+        style={{ width: "200px" }}
+        alt={v}
+      />
+      <div>
+        <Button>제거</Button>
+      </div>
     </div>
-  </div>
-))}
+  ));
+}
 ```
-```js
-// front/component/ImagesZoom/index.js
-{images.map((v) => (
-  <ImgWrapper key={v.src}>
-    <img src={`http://localhost:3065/${v.src}`} alt={v.src} />
-  </ImgWrapper>
-))}
-```
+
+`front/component/ImagesZoom/index.js`과 `front/components/PostImages.js` 내의 `src` 부분도 똑같이 수정한다.
 
 #### back
 
@@ -1514,12 +1546,411 @@ uploads 폴더를 front에 접근할 수 있도록 하기 위해 `app.js`에 `ex
 app.use("/", express.static(path.join(__dirname, "uploads")));
 ```
 
-* `app.use(요청 경로, express.static(실제 경로))`: 정적 파일 제공
-* 요청 경로: `http://localhost:3000` <-> 실제 경로: `C:/Users/user/Desktop/react-nodebird/ch4/back/uploads`
-* 프론트에서는 서버의 폴더 구조를 파악하기 못해 보안에 도움이 된다.
-* `path.join`을 통해 운영체제에 맞게 경로 구분자를 다룰 수 있다.
+- `app.use(요청 경로, express.static(실제 경로))`: 정적 파일 제공
+- 요청 경로: `http://localhost:3000` <-> 실제 경로: `C:/Users/user/Desktop/react-nodebird/ch4/back/uploads`
+- 프론트에서는 서버의 폴더 구조를 파악하지 못하기 때문에 보안에 도움이 된다.
+- `path.join`: 운영체제에 맞게 경로 구분자를 다룰 수 있도록 해준다.
 
-### 업로드한 이미지 제거
+### 업로드된 이미지 제거
 
-### 게시글 업로드 시 이미지 경로도 서버에 전달
+`dispatch({ type: REMOVE_IMAGE, data: index })`
 
+앞서 살펴본 업로드 방식 중 2번째를 사용하기 때문에 이미지를 삭제해도 서버에는 그대로 남아있도록 동기 액션으로 작성한다.
+
+```js
+// front/reducer/post.js
+case REMOVE_IMAGE:
+  draft.imagePaths = draft.imagePaths.filter((_, i) => i !== action.data);
+  break;
+```
+
+### 폼 전송 시 게시글 업로드하기
+
+```js
+// front/components/PostForm.js
+const onSubmit = useCallback(() => {
+  if (!text || !text.trim()) {
+    return alert("게시글을 작성하세요.");
+  }
+  const formData = new FormData();
+  imagePaths.forEach((p) => {
+    formData.append("image", p);
+  });
+  formData.append("content", text);
+  dispatch({
+    type: ADD_POST_REQUEST,
+    data: formData,
+  });
+}, [text, imagePaths]);
+```
+
+데이터를 json 형식으로 전달해도 되지만 multer를 활용하기 위해 이미지 주소와 텍스트를 formData에 담아 전송한다.
+
+```js
+// back/routes/post.js
+router.post("/", upload.none(), isLoggedIn, async (req, res, next) => {
+  try {
+    const post = await Post.create({
+      content: req.body.content,
+      UserId: req.user.id,
+    });
+    if (req.body.image) {
+      if (Array.isArray(req.body.image)) {
+        const images = await Promise.all(
+          req.body.image.map((image) => Image.create({ src: image }))
+        );
+        await post.addImages(images);
+      } else {
+        const image = await Image.create({ src: req.body.image });
+        await post.addImage(image);
+      }
+    }
+    const fullPost = await Post.findOne({
+      where: { id: post.id },
+      include: [
+        { model: Image },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: User, attributes: ["id", "nickname"] },
+        { model: User, attributes: ["id"], as: "Likers" },
+      ],
+    });
+    res.status(201).json(fullPost);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+
+* 이미지나 파일이 아닌 경우에는 `upload.none()`를 통해 업로드할 수 있다. formData 내의 데이터는 `req.body`를 통해 접근할 수 있다.
+
+* `req.body.image`의 경우 이미지를 1장 업로드 시 문자열, 2장 이상 업로드 시 배열이 되기 때문에 두 경우를 구분하여 작성한다.
+
+* `Promise.all` 대신 `bulkCreate` 메서드도 사용이 가능하다.
+```js
+const images = await Image.bulkCreate(
+  req.body.image.map((image) => ({ src: image })));
+```
+
+```js
+case ADD_POST_SUCCESS:
+  draft.addPostLoading = false;
+  draft.addPostDone = true;
+  draft.mainPosts.unshift(action.data);
+  draft.imagePaths = [];
+  break;
+```
+
+게시글 업로드가 완료되었으면 `imagePaths` 배열은 비워준다.
+
+---
+
+## 해시태그 등록하기
+
+```js
+router.post("/", upload.none(), isLoggedIn, async (req, res, next) => {
+  try {
+    const post = await Post.create({
+      content: req.body.content,
+      UserId: req.user.id,
+    });
+    const hashtags = req.body.content.match(/#[^\s]+/g);
+    if (hashtags) {
+      const result = await Promise.all(
+        hashtags.map((tag) =>
+          Hashtag.findOrCreate({
+            where: { name: tag.slice(1).toLowerCase() },
+          })
+        )
+      );
+      await post.addHashtags(result.map((v) => v[0]));
+    }
+    ...
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+`findOrCreate`: where 조건을 만족하면 find로 동작, 아니라면 create로 동작됨 -> 반환값이 `[['react', true], ['express', true]]` 이렇게 이차원 배열 형식이기 때문에 첫번째 요소를 postHashtag 테이블에 등록한다.
+
+---
+
+## 리트윗하기
+
+### 리트윗 정책
+
+1. 자신의 글은 리트윗할 수 없다.
+2. 자신의 글을 리트윗한 다른 사람의 글을 리트윗할 수 없다.
+3. 리트윗할 글이 **리트윗한 게시글**인 경우 그 글의 `RetweetId`를, **원글**인 경우 원글의 id를 리트윗할 글의 `RetweetId`로 설정한다.
+4. 특정 글을 2번 이상 리트윗할 수 없다.
+
+### 리트윗 과정
+
+#### back
+
+```js
+// back/routes/post.js
+router.post("/:postId/retweet", isLoggedIn, async (req, res, next) => {
+  try {
+    const post = await Post.findOne({
+      where: { id: Number(req.params.postId) },
+      include: [
+        {
+          model: Post,
+          as: "Retweet",
+        },
+      ],
+    });
+    if (!post) {
+      return res.status(403).send("존재하지 않는 게시글입니다.");
+    }
+
+    // 리트윗 정책 1번, 2번
+    // post.Retweet?.UserId -> 리트윗된 포스트인 경우, 원글의 작성자를 가져옴
+    if (post.UserId === req.user.id || post.Retweet?.UserId === req.user.id) {
+      return res.status(403).send("자신의 글은 리트윗할 수 없습니다.");
+    }
+
+    // 리트윗 정책 3번
+    const retweetTargetId = post.RetweetId || post.id;
+
+    // 리트윗 정책 4번
+    const exPost = await Post.findOne({
+      where: {
+        UserId: req.user.id,
+        RetweetId: retweetTargetId,
+      },
+    });
+    if (exPost) {
+      return res.status(403).send("이미 리트윗했습니다.");
+    }
+    const retweet = await Post.create({
+      UserId: req.user.id,
+      RetweetId: retweetTargetId,
+      content: "retweet",
+    });
+
+    // 원글의 정보를 가져오기 위해 Retweet을 include, 그 외 Image, Comment, User, Likers 등 다른 컴포넌트에서 필요로 하는 테이블도 include한다.
+    const retweetWithPrevPost = await Post.findOne({
+      where: { id: retweet.id },
+      include: [
+        {
+          // 이 때 원글 작성자와 원글에 담긴 사진을 PostCard 컴포넌트가 사용하기 때문에 이 부분은 Retweet 내에서 추가적으로 include한다.
+          model: Post,
+          as: "Retweet",
+          include: [
+            { model: User, attributes: ["id", "nickname"] },
+            { model: Image },
+          ],
+        },
+        { model: Image },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: User, attributes: ["id", "nickname"] },
+        { model: User, attributes: ["id"], as: "Likers" },
+      ],
+    });
+    res.status(201).json(retweetWithPrevPost);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+`retweetWithPrevPost`처럼 가져와야 하는 테이블의 수가 많아질 경우, DB에서 가져오는 속도가 느려져 성능 저하의 원인이 될 수 있다.<br>
+댓글 같은 경우 댓글창 버튼을 누를 때 db에서 가져오는 방식을 사용함으로써 include하는 테이블들을 분리하는 과정이 필요하다.
+
+```js
+// back/routes/posts.js
+router.get("/", async (req, res, next) => {
+  try {
+    const posts = await Post.findAll({
+      limit: 10,
+      order: [
+        ["createdAt", "DESC"],
+        [Comment, "createdAt", "DESC"],
+      ],
+      include: [
+        { model: User, attributes: ["id", "nickname"] },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: Image },
+        { model: User, attributes: ["id"], as: "Likers" },
+        {
+          model: Post,
+          as: "Retweet",
+          include: [
+            { model: User, attributes: ["id", "nickname"] },
+            { model: Image },
+          ],
+        },
+      ],
+    });
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+게시글 로드 시에도 추가적으로 Retweet을 include해야 에러가 발생하지 않는다.
+
+#### front
+
+```js
+// front/components/PostCard.js
+{post.Retweet && post.RetweetId ? (
+  <Card
+    cover={
+      post.Retweet.Images[0] && (
+        <PostImages images={post.Retweet.Images} />
+      )
+    }
+  >
+    <Card.Meta
+      avatar={<Avatar>{post.Retweet.User.nickname[0]}</Avatar>}
+      title={post.Retweet.User.nickname}
+      description={<PostCardContent postData={post.Retweet.content} />}
+    />
+  </Card>
+) : (
+  <Card.Meta
+    avatar={<Avatar>{post.User.nickname[0]}</Avatar>}
+    title={post.User.nickname}
+    description={<PostCardContent postData={post.content} />}
+  />
+)}
+```
+
+리트윗한 게시글인 경우 게시글 내용을 `Card` 컴포넌트로 한 번 더 감싼 원글을 보여주도록 하고, 일반 게시글이면 본래 정보를 보여준다.
+
+### 리트윗 오류메시지가 여러번 출력되는 오류
+
+`PostCard` 컴포넌트 내에서 `useEffect`를 통해 오류메시지를 출력하는 경우, `PostCard`의 수만큼 `useEffect`가 일어나기 때문에 조건 처리를 해주거나 아니면 상위 컴포넌트에서 `useEffect`를 작성해야 한다.
+
+---
+
+## 쿼리스트링과 lastId 방식
+
+단순히 limit: 10만 설정할 경우, 스크롤을 내려서 게시글 추가 로드 시 최신 10개의 글만 반복적으로 가져오게 된다.
+
+### lastId
+
+```js
+// front/pages/index.js
+useEffect(() => {
+  console.log(hasMorePosts, loadPostsLoading);
+  const onScroll = () => {
+    if (
+      window.scrollY + document.documentElement.clientHeight >
+      document.documentElement.scrollHeight - 300
+    ) {
+      if (hasMorePosts && !loadPostsLoading) {
+        const lastId = mainPosts[mainPosts.length - 1]?.id;
+        dispatch({
+          type: LOAD_POSTS_REQUEST,
+          lastId,
+        });
+      }
+    }
+  };
+  window.addEventListener("scroll", onScroll);
+  return () => {
+    window.removeEventListener("scroll", onScroll);
+  };
+}, [hasMorePosts, loadPostsLoading]);
+```
+
+`lastId`는 **현재 로드된 게시글 중 가장 아래에 위치한 게시글의 id를 기억한다.** 초기 로드 시에는 mainPosts 부분이 비어있기 때문에 반드시 `?.` 연산자를 사용해서 이 때는 id를 불러오지 않도록 해야 한다.
+
+### GET 방식과 쿼리스트링
+
+```js
+// front/sagas/post.js
+function loadPostsAPI(lastId) {
+  return axios.get(`/posts?lastId=${lastId || 0}`);
+}
+
+function* loadPosts(action) {
+  try {
+    const result = yield call(loadPostsAPI, action.lastId);
+    yield put({
+      type: LOAD_POSTS_SUCCESS,
+      data: result.data,
+    });
+  } catch (err) {
+    console.error(err);
+    yield put({
+      type: LOAD_POSTS_FAILURE,
+      error: err.response.data,
+    });
+  }
+}
+```
+
+* **GET** method의 경우 데이터를 같이 전송할 수 없기 때문에 이 경우 주소 뒤에 `?key=value`와 같이 쿼리스트링을 찍어주는 방법을 사용한다.
+* 주소만 봐도 데이터가 담겨있기 때문에 주소를 캐싱하면 데이터도 같이 캐싱이 된다는 장점이 있다.
+
+### 게시글 로드 설정
+
+```js
+// back/routes/posts.js
+router.get("/", async (req, res, next) => {
+  try {
+    const where = {};
+    if (Number(req.query.lastId)) {
+      where.id = { [Op.lt]: Number(req.query.lastId) };
+    }
+    const posts = await Post.findAll({
+      where,
+      limit: 10,
+      order: [
+        ["createdAt", "DESC"],
+        [Comment, "createdAt", "DESC"],
+      ],
+      include: [
+        { model: User, attributes: ["id", "nickname"] },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: Image },
+        { model: User, attributes: ["id"], as: "Likers" },
+        {
+          model: Post,
+          as: "Retweet",
+          include: [
+            { model: User, attributes: ["id", "nickname"] },
+            { model: Image },
+          ],
+        },
+      ],
+    });
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+```
+
+`lastId`가 존재하는 경우에는 `lastId` 다음 게시글부터 최신순으로 10개를, 처음 로드해서 `lastId`가 0인 경우는 제일 위부터 최신순으로 10개를 가져오도록 where을 통해 설정한다.
+
+```js
+// front/reducers/post.js
+case LOAD_POSTS_SUCCESS:
+  draft.loadPostsLoading = false;
+  draft.loadPostsDone = true;
+  draft.mainPosts = draft.mainPosts.concat(action.data);
+  draft.hasMorePosts = action.data.length === 10;
+```
+
+가져오는 데이터의 수가 10개가 아닌 경우 지금 가져온 게시글이 마지막 게시글이기 때문에 `hasMorePosts`를 `false`로 설정하고 더 이상 게시글을 로드하지 않는다.

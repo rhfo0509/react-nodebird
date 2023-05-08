@@ -28,12 +28,12 @@ SPA(Single Page Application)의 등장에 따라 도입된 방식으로, React�
 2.
 ![image](https://user-images.githubusercontent.com/85874042/228756985-4f015cfd-7271-4e43-96dd-8a8cbdcfc429.png)
 
-이 후에 app.js 파일을 서버로부터 다운받는데, 이 app.js에는 어플리케이션이 구동되기 위한 로직과 프레임워크, 라이브러리 파일들이 들어있기 때문에 다운로드 받는 데 많은 시간이 소요된다.
+이후에 app.js 파일을 서버로부터 다운받는데, 이 app.js에는 어플리케이션이 구동되기 위한 로직과 프레임워크, 라이브러리 파일들이 들어있기 때문에 다운로드 받는 데 많은 시간이 소요된다.
 
 3.
 ![image](https://user-images.githubusercontent.com/85874042/228758426-f7132239-8048-4b89-9b3c-253210e9bedc.png)
 
-그 외 필요에 따라 상품 추가, 수정, 삭제와 같이 추가로 필요한 api 요청을 한다면 서버에서 json 파일을 다운받아 app.js 자바스크립트 파일과 같이 동적으로 html을 생성한다.
+나중에 상품 추가, 수정, 삭제와 같이 추가로 api 요청을 하는 경우에 서버로부터 필요한 json 데이터를 다운받아 페이지를 구성하게 된다.
 
 #### 장점
 
@@ -86,8 +86,14 @@ SPA(Single Page Application)의 등장에 따라 도입된 방식으로, React�
 
 Link 컴포넌트를 사용하여 들어갈 가능성이 있는 페이지를 미리 가져오고, 그 페이지를 클릭하는 경우 새롭게 HTML부터 다시 받아오는 것이 아닌 바로 렌더링을 해서 보여준다.
 
-`import Link from 'next/link` 이후
-![image](https://user-images.githubusercontent.com/85874042/229054564-70788cd9-5011-4261-ab43-bb58ab052fcd.png)
+`import Link from 'next/link'` 이후
+
+```js
+<Link href="/"><a>노드버드</a></Link>
+<Link href="/profile"><a>프로필</a></Link>
+<Link href="/signup"><a>회원가입</a></Link>
+```
+
 처럼 `<a>` 태그가 아닌 `<Link>` 태그에 href 속성을 넣어준다.
 
 3. code spliting
@@ -122,7 +128,8 @@ index.js의 AppLayout 컴포넌트 내에 있는 `<div>Hello Next!</div>`를 App
 ---
 
 ### components 폴더와 pages 폴더
-<b>components</b> : 여러 페이지에 공통으로 적용되는 재사용 가능한 컴포넌트인 경우 여기에 작성
+
+<b>components</b> : 여러 페이지에 공통으로 적용되는 재사용 가능한 컴포넌트인 경우 여기에 작성<br>
 <b>pages</b> : 일반적인 페이지 컴포넌트의 경우 여기에 작성
 
 

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import wrapper from "../store/configureStore";
 
 import AppLayout from "../components/AppLayout";
 import PostForm from "../components/PostForm";
@@ -20,12 +21,6 @@ const Home = () => {
   }, [retweetError]);
 
   useEffect(() => {
-    dispatch({ type: LOAD_MY_INFO_REQUEST });
-    dispatch({ type: LOAD_POSTS_REQUEST });
-  }, []);
-
-  useEffect(() => {
-    console.log(hasMorePosts, loadPostsLoading);
     const onScroll = () => {
       if (
         window.scrollY + document.documentElement.clientHeight >
@@ -55,4 +50,10 @@ const Home = () => {
   );
 };
 
+export const getServerSideProps = wrapper.getServerSideProps(
+  (store) => async () => {
+    store.dispatch({ type: LOAD_MY_INFO_REQUEST });
+    store.dispatch({ type: LOAD_POSTS_REQUEST });
+  }
+);
 export default Home;
