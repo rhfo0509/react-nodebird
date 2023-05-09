@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { END } from "redux-saga";
+import axios from "axios";
 import wrapper from "../store/configureStore";
 
 import AppLayout from "../components/AppLayout";
@@ -51,9 +53,17 @@ const Home = () => {
 };
 
 export const getServerSideProps = wrapper.getServerSideProps(
-  (store) => async () => {
-    store.dispatch({ type: LOAD_MY_INFO_REQUEST });
-    store.dispatch({ type: LOAD_POSTS_REQUEST });
-  }
+  (store) =>
+    async ({ req, res }) => {
+      const cookie = req ? req.headers.cookie : "";
+      axios.defaults.headers.Cookie = "";
+      if (req && cookie) {
+        axios.defaults.headers.Cookie = cookie;
+      }
+      store.dispatch({ type: LOAD_MY_INFO_REQUEST });
+      store.dispatch({ type: LOAD_POSTS_REQUEST });
+      store.dispatch(END);
+      await store.sagaTask.toPromise();
+    }
 );
 export default Home;

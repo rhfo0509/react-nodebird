@@ -1,23 +1,22 @@
-import React, { useEffect } from "react";
+import React from "react";
 import Head from "next/head";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import Router from "next/router";
+import { END } from "redux-saga";
+import axios from "axios";
+import wrapper from "../store/configureStore";
 
 import AppLayout from "../components/AppLayout";
 import NicknameEditForm from "../components/NicknameEditForm";
 import FollowList from "../components/FollowList";
-import { LOAD_FOLLOWERS_REQUEST, LOAD_FOLLOWINGS_REQUEST, LOAD_MY_INFO_REQUEST } from "../reducers/user";
+import {
+  LOAD_FOLLOWERS_REQUEST,
+  LOAD_FOLLOWINGS_REQUEST,
+  LOAD_MY_INFO_REQUEST,
+} from "../reducers/user";
 
 const profile = () => {
-  const dispatch = useDispatch();
   const { me } = useSelector((state) => state.user);
-
-  useEffect(() => {
-    // 새로고침되면 스토어 상태값이 초기화되기 때문에 LOAD_MY_INFO_REQUEST을 dispatch하여 me에 값을 넣어준다.
-    dispatch({ type: LOAD_MY_INFO_REQUEST });
-    dispatch({ type: LOAD_FOLLOWERS_REQUEST });
-    dispatch({ type: LOAD_FOLLOWINGS_REQUEST });
-  }, []);
 
   if (!me) {
     Router.replace("/");
@@ -37,5 +36,21 @@ const profile = () => {
     </>
   );
 };
+
+export const getServerSideProps = wrapper.getServerSideProps(
+  (store) =>
+    async ({ req, res }) => {
+      const cookie = req ? req.headers.cookie : "";
+      axios.defaults.headers.Cookie = "";
+      if (req && cookie) {
+        axios.defaults.headers.Cookie = cookie;
+      }
+      store.dispatch({ type: LOAD_MY_INFO_REQUEST });
+      store.dispatch({ type: LOAD_FOLLOWERS_REQUEST });
+      store.dispatch({ type: LOAD_FOLLOWINGS_REQUEST });
+      store.dispatch(END);
+      await store.sagaTask.toPromise();
+    }
+);
 
 export default profile;

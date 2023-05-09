@@ -2,6 +2,9 @@ import { all, fork, put, takeLatest, call } from "redux-saga/effects";
 import axios from "axios";
 
 import {
+  LOAD_USER_FAILURE,
+  LOAD_USER_REQUEST,
+  LOAD_USER_SUCCESS,
   LOAD_MY_INFO_FAILURE,
   LOAD_MY_INFO_REQUEST,
   LOAD_MY_INFO_SUCCESS,
@@ -33,6 +36,26 @@ import {
   REMOVE_FOLLOWER_SUCCESS,
   REMOVE_FOLLOWER_FAILURE,
 } from "../reducers/user";
+
+function loadUserAPI(data) {
+  return axios.get(`/user/${data}`);
+}
+
+function* loadUser(action) {
+  try {
+    const result = yield call(loadUserAPI, action.data);
+    yield put({
+      type: LOAD_USER_SUCCESS,
+      data: result.data,
+    });
+  } catch (err) {
+    console.error(err);
+    yield put({
+      type: LOAD_USER_FAILURE,
+      error: err.response.data,
+    });
+  }
+}
 
 function loadMyInfoAPI() {
   return axios.get("/user");
@@ -233,6 +256,10 @@ function* removeFollower(action) {
   }
 }
 
+function* watchLoadUser() {
+  yield takeLatest(LOAD_USER_REQUEST, loadUser);
+}
+
 function* watchLoadMyInfo() {
   yield takeLatest(LOAD_MY_INFO_REQUEST, loadMyInfo);
 }
@@ -275,6 +302,7 @@ function* watchRemoveFollower() {
 
 export default function* userSaga() {
   yield all([
+    fork(watchLoadUser),
     fork(watchLoadMyInfo),
     fork(watchLogIn),
     fork(watchLogOut),

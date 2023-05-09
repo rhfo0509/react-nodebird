@@ -78,6 +78,46 @@ router.get("/followings", isLoggedIn, async (req, res, next) => {
   }
 });
 
+router.get("/:userId", async (req, res, next) => {
+  try {
+    const fullUserWithoutPassword = await User.findOne({
+      where: { id: Number(req.params.userId) },
+      attributes: {
+        exclude: ["password"],
+      },
+      include: [
+        {
+          model: Post,
+          attributes: ["id"],
+        },
+        {
+          model: User,
+          as: "Followings",
+          attributes: ["id"],
+        },
+        {
+          model: User,
+          as: "Followers",
+          attributes: ["id"],
+        },
+      ],
+    });
+    if (fullUserWithoutPassword) {
+      const data = fullUserWithoutPassword.toJSON();
+      data.Posts = data.Posts.length;
+      data.Followings = data.Followings.length;
+      data.Followers = data.Followers.length;
+      res.status(200).json(data);
+    } else {
+      // GET /user/10000
+      res.status(404).json("존재하지 않는 사용자입니다.");
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
 router.patch("/nickname", isLoggedIn, async (req, res, next) => {
   try {
     await User.update(
@@ -105,7 +145,6 @@ router.post("/login", isNotLoggedIn, (req, res, next) => {
         console.error(loginError);
         return next(loginError);
       }
-      console.log(req.session);
       const fullUserWithoutPassword = await User.findOne({
         where: { id: user.id },
         attributes: {
