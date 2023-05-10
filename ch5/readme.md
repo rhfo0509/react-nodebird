@@ -93,8 +93,8 @@ const rootReducer = (state, action) => {
 };
 ```
 
-> **`combineReducers`**는 `(...reducers) => (state, action) => state`의 고차 함수이므로 **`combineReducer`**는 `(state, action) => state` 꼴로 반환된다.<br>
-> 따라서 `combineReducer(state, action)`로 호출하면 완성된 **state**가 나오게 된다.
+> **`combineReducers`**는 `(...reducers) => (state, action) => state`의 고차 함수 꼴이기 때문에 **`combinedReducer`**의 형태는 `(state, action) => state`가 된다.<br>
+> 마지막에 `combineReducer(state, action)`로 호출하면 완성된 **state**가 나오게 된다.
 
 #### 문제점(2)
 
@@ -120,7 +120,7 @@ export const getServerSideProps = wrapper.getServerSideProps(
 );
 ```
 
-**`END`**: `take`에 의해 대기중인 saga들을 모두 종료시킴 -> 단, 하위 task가 아직 실행중인 경우에는 종료될 때까지 기다린 후 task을 종료한다.
+**`END`**: `take`에 의해 대기중인 saga들을 모두 종료시킴 -> 단, saga의 하위 task가 아직 실행중인 경우에는 종료될 때까지 기다린다.
 
 `task.toPromise()`: 모든 task가 실행을 마쳤을 때 resolve된 프로미스가 생성된다. 이를 통해 모든 saga들이 종료되었음을 보장한다.
 
@@ -151,9 +151,9 @@ export const getServerSideProps = wrapper.getServerSideProps(
 );
 ```
 
-프론트 서버에서 브라우저로부터 전달받은 `req` 객체 내의 cookie를 `axios.defaults.headers.Cookie`에 추가함으로써 프론트 서버에서 백엔드 서버로 보내는 모든 요청에 대해 cookie가 함께 전송되도록 한다.
+브라우저로부터 전달받은 `req` 객체 내의 cookie를 `axios.defaults.headers.Cookie`에 추가함으로써 프론트 서버에서 백엔드 서버로 보내는 모든 요청에 대해 cookie가 함께 전송되도록 한다.
 
-#### 쿠키 공유 문제(질문하기)
+#### 쿠키 공유 문제
 
 단순히
 
@@ -162,19 +162,14 @@ const cookie = req ? req.headers.cookie : "";
 axios.defaults.headers.Cookie = cookie;
 ```
 
-이런 식으로만 작성해도 괜찮은거 아닌가요?
-예를 들어 A의 cookie값이 axios.defaults에 저장되어 있는 상태에서 B가 인덱스 페이지에 접근하는 경우 req.headers.cookie 값이 달라지니까 결국 axios.defaults에 저장되는 cookie값이 달라지니 문제가 없다고 생각되는데요..
-
-제가 기억하기론 어떤 페이지 중 getServerSideProps를 안 쓰는 페이지가 있을 때 그 페이지에 접속하면 쿠키가 초기화되지 않아서 이전 로그인된 사용자 정보가 유지되었던 문제가 있었고 Cookie가 빈 값일때도 axios가 빈 값은 무시해버려서 문제였었습니다.
-
-if문이 공유를 막는다기보다는 Cookie = ''이 막습니다.
+이런 식으로만 작성하면 `getServerSideProps`를 안 쓰는 페이지가 있을 때 그 페이지에 접속하면 쿠키가 초기화되지 않아서 이전 로그인된 사용자 정보가 유지되는 문제가 발생 + Cookie가 빈 값일때도 axios가 빈 값은 무시해버려서 문제가 발생함 (질문하기)
 
 ---
 
 ## getStaticProps 사용해보기
 
 - `getServerSideProps` : 모든 요청에 대해 런타임에 실행됨, 일반적으로 자주 변경되거나 사용자 데이터를 기반으로 개인화된 콘텐츠에 사용
-- `getStaticProps` : 빌드할 때 미리 html 파일을 만들어 유저가 그 페이지에 방문할 때마다 html 파일을 제공, 블로그나 뉴스 페이지 같이 일반적으로 자주 변경되지 않는 콘텐츠에 사용 -> 사용할 수 있는 경우가 한정적임
+- `getStaticProps` : 빌드할 때 미리 html 파일을 만들어 유저가 그 페이지에 방문할 때마다 html 파일을 제공, 블로그나 뉴스 페이지 같이 일반적으로 자주 변경되지 않는 콘텐츠에 사용
 
 ```js
 // front/pages/about.js
@@ -226,6 +221,8 @@ export const getStaticProps = wrapper.getStaticProps((store) => async () => {
 export default Profile;
 ```
 
+> `getStaticProps`의 경우 사용할 수 있는 경우가 한정적임 -> 로그인 여부에 따라 보여지는 부분이 달라지거나, 게시글의 댓글이나 좋아요처럼 실시간으로 반영되야 할 부분이 있는 경우 `getServerSideProps`를 적용해야 한다.
+
 ```js
 // back/routes/user.js
 router.get("/:userId", async (req, res, next) => {
@@ -259,7 +256,6 @@ router.get("/:userId", async (req, res, next) => {
       data.Followers = data.Followers.length;
       res.status(200).json(data);
     } else {
-      // GET /user/10000
       res.status(404).json("존재하지 않는 사용자입니다.");
     }
   } catch (error) {
@@ -276,6 +272,139 @@ router.get("/:userId", async (req, res, next) => {
 ## 다이나믹 라우팅
 
 게시글을 공유하려면 각 게시글에 대한 주소가 필요하다.<br>
-이 때 페이지 경로에 매개변수(parameter)를 추가하여 
+`front/pages` 폴더 내에 `post` 폴더를 만들어 그 안에 `[id].js`처럼 대괄호 형식으로 파일을 작성하면 `post/1`, `post/2`처럼 동적으로 게시글의 주소를 처리할 수 있도록 해준다.
 
-`post/:id`
+```js
+// front/pages/post/[id].js
+const Post = () => {
+  const router = useRouter();
+  const { id } = router.query;
+  const { singlePost } = useSelector((state) => state.post);
+  return (
+    <AppLayout>
+      <Head>
+        <title>
+          {singlePost.User.nickname}
+          님의 게시글
+        </title>
+        <meta name="description" content={singlePost.content} />
+        <meta
+          property="og:title"
+          content={`${singlePost.User.nickname}님의 게시글`}
+        />
+        <meta property="og:description" content={singlePost.content} />
+        <meta
+          property="og:image"
+          content={
+            singlePost.Images[0]
+              ? singlePost.Images[0].src
+              : "https://nodebird.com/favicon.ico"
+          }
+        />
+        <meta property="og:url" content={`https://nodebird.com/post/${id}`} />
+      </Head>
+      <PostCard post={singlePost} />
+    </AppLayout>
+  );
+};
+
+export const getServerSideProps = wrapper.getServerSideProps(
+  (store) =>
+    async ({ req, query }) => {
+      const cookie = req ? req.headers.cookie : "";
+      axios.defaults.headers.Cookie = "";
+      if (req && cookie) {
+        axios.defaults.headers.Cookie = cookie;
+      }
+      store.dispatch({ type: LOAD_MY_INFO_REQUEST });
+      store.dispatch({ type: LOAD_POST_REQUEST, data: query.id });
+      store.dispatch(END);
+      await store.sagaTask.toPromise();
+    }
+);
+
+export default Post;
+```
+
+`useRouter` Hook을 통해 라우터 객체를 만들면, `http://localhost:3000/post/[id]`로 접근했을 때 **[id]** 부분을 `router.query.id`로 얻어낼 수 있다.
+
+![image](https://github.com/ZeroCho/react-nodebird/assets/85874042/918890a2-72f5-4efb-8e5f-3897fec747a4)
+
+Head 안에 있는 부분은 알아서 서버 사이드 렌더링이 되기 때문에 검색엔진이 읽을 수 있게 된다. `og:`에는 공유를 했을 때 보여지는 부분을 설정할 수 있다.
+
+---
+
+## CSS 서버 사이드 렌더링
+
+### `.babelrc`
+
+next가 기본적으로 정해주는 babel 설정을 `.babelrc` 파일을 통해 customize할 수 있다.
+
+설치 : `npm i babel-plugin-styled-components`
+
+```json
+{
+  "presets": ["next/babel"],
+  "plugins": [
+    [
+      "babel-plugin-styled-components",
+      {
+        "ssr": true,
+        "displayName": true
+      }
+    ]
+  ]
+}
+```
+
+### `_document.js`
+
+모든 페이지들의 공통 페이지인 `_app.js`의 상위에서 동작되며,
+`styled-components`를 서버 사이드 렌더링하기 위한 코드를 여기서 작성한다.
+
+```js
+// front/pages/_document.js
+import React from "react";
+import Document, { Html, Head, Main, NextScript } from "next/document";
+import { ServerStyleSheet } from "styled-components";
+
+export default class MyDocument extends Document {
+  static async getInitialProps(ctx) {
+    const sheet = new ServerStyleSheet();
+    const originalRenderPage = ctx.renderPage;
+    try {
+      ctx.renderPage = () =>
+        originalRenderPage({
+          enhanceApp: (App) => (props) =>
+            sheet.collectStyles(<App {...props} />),
+        });
+      const initialProps = await Document.getInitialProps(ctx);
+      return {
+        ...initialProps,
+        styles: (
+          <>
+            {initialProps.styles}
+            {sheet.getStyleElement()}
+          </>
+        ),
+      };
+    } catch (error) {
+      console.error(error);
+    } finally {
+      sheet.seal();
+    }
+  }
+
+  render() {
+    return (
+      <Html>
+        <Head />
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+```

@@ -7,6 +7,10 @@ import useInput from "../hooks/useInput";
 
 import { loginRequestAction } from "../reducers/user";
 
+const FormWrapper = styled(Form)`
+  padding: 10px;
+`;
+
 const ButtonWrapper = styled.div`
   margin-top: 10px;
 `;
@@ -29,7 +33,7 @@ const LoginForm = () => {
   }, [email, password]);
 
   return (
-    <Form onFinish={onSubmitForm}>
+    <FormWrapper onFinish={onSubmitForm}>
       <div>
         <label htmlFor="user-email">이메일</label>
         <br />
@@ -60,7 +64,7 @@ const LoginForm = () => {
           <a>회원가입</a>
         </Link>
       </ButtonWrapper>
-    </Form>
+    </FormWrapper>
   );
 };
 

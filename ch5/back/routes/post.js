@@ -15,6 +15,36 @@ try {
   fs.mkdirSync("uploads");
 }
 
+router.get("/:postId", async (req, res, next) => {
+  try {
+    const post = await Post.findOne({
+      where: { id: Number(req.params.postId) },
+    });
+
+    if (!post) {
+      return res.status(404).json("존재하지 않는 게시글입니다.");
+    }
+
+    const fullPost = await Post.findOne({
+      where: { id: post.id },
+      include: [
+        { model: Image },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: User, attributes: ["id", "nickname"] },
+        { model: User, attributes: ["id"], as: "Likers" },
+      ],
+    });
+
+    res.status(201).json(fullPost);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
 router.post("/:postId/retweet", isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findOne({
