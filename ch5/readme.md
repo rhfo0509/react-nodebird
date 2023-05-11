@@ -336,6 +336,8 @@ Head 안에 있는 부분은 알아서 서버 사이드 렌더링이 되기 때�
 
 ## CSS 서버 사이드 렌더링
 
+`styled-components`로 만든 CSS가 서버 사이드 렌더링 시에도 적용이 되도록 하려면 두 가지 설정이 필요하다.
+
 ### `.babelrc`
 
 next가 기본적으로 정해주는 babel 설정을 `.babelrc` 파일을 통해 customize할 수 있다.
@@ -356,6 +358,7 @@ next가 기본적으로 정해주는 babel 설정을 `.babelrc` 파일을 통해
   ]
 }
 ```
+`displayName`을 `true`로 설정하면 `styled-components`에 의해 랜덤한 문자열로 해시화된 클래스명을 알아보기 쉽도록 바꿔준다.
 
 ### `_document.js`
 
@@ -408,3 +411,219 @@ export default class MyDocument extends Document {
   }
 }
 ```
+
+---
+
+## 유저 게시글, 해시태그 게시글
+
+### 유저 게시글
+
+특정 유저를 클릭하면 그 사람이 작성한 게시글들을 보여줌
+
+```js
+// front/pages/user/[id].js
+const User = () => {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { id } = router.query;
+  const { mainPosts, hasMorePosts, loadPostsLoading, retweetError } =
+    useSelector((state) => state.post);
+  const { userInfo } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (retweetError) {
+      alert(retweetError);
+    }
+  }, [retweetError]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (
+        window.scrollY + document.documentElement.clientHeight >
+        document.documentElement.scrollHeight - 300
+      ) {
+        if (hasMorePosts && !loadPostsLoading) {
+          const lastId = mainPosts[mainPosts.length - 1]?.id;
+          dispatch({
+            type: LOAD_USER_POSTS_REQUEST,
+            lastId,
+            data: id,
+          });
+        }
+      }
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [hasMorePosts, loadPostsLoading]);
+  return (
+    <>
+      <Head>
+        <title>{userInfo.nickname}님의 글</title>
+      </Head>
+      <AppLayout>
+        <Card
+          actions={[
+            <div key="twit">
+              짹짹
+              <br />
+              {userInfo.Posts}
+            </div>,
+            <div key="followings">
+              팔로잉
+              <br />
+              {userInfo.Followings}
+            </div>,
+            <div key="followers">
+              팔로워
+              <br />
+              {userInfo.Followers}
+            </div>,
+          ]}
+        >
+          <Card.Meta
+            avatar={<Avatar>{userInfo.nickname[0]}</Avatar>}
+            title={userInfo.nickname}
+          />
+        </Card>
+        {mainPosts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </AppLayout>
+    </>
+  );
+};
+
+export const getServerSideProps = wrapper.getServerSideProps(
+  (store) =>
+    async ({ req, query }) => {
+      const cookie = req ? req.headers.cookie : "";
+      axios.defaults.headers.Cookie = "";
+      if (req && cookie) {
+        axios.defaults.headers.Cookie = cookie;
+      }
+      store.dispatch({ type: LOAD_MY_INFO_REQUEST });
+      store.dispatch({ type: LOAD_USER_REQUEST, data: query.id });
+      store.dispatch({ type: LOAD_USER_POSTS_REQUEST, data: query.id });
+      store.dispatch(END);
+      await store.sagaTask.toPromise();
+    }
+);
+export default User;
+```
+
+* `LOAD_MY_INFO_REQUEST`: state에 내 정보(`me`) 저장 -> `AppLayout`과 `UserProfile` 컴포넌트에서 사용<br>
+* `LOAD_USER_REQUEST`: state에 유저 정보(`userInfo`) 저장 -> `User` 컴포넌트에서 사용<br>
+* `LOAD_USER_POSTS_REQUEST`: state에 유저가 작성한 게시글(`mainPosts`) 저장 -> `User`와 `PostCard` 컴포넌트에서 사용
+
+
+### 해시태그 게시글
+
+해시태그를 클릭하면 그 해시태그가 포함된 게시글들을 보여줌
+
+```js
+// front/pages/hashtag/[tag].js
+import React, { useEffect } from "react";
+import { useRouter } from "next/router";
+import { useDispatch, useSelector } from "react-redux";
+import { END } from "redux-saga";
+import axios from "axios";
+import wrapper from "../../store/configureStore";
+
+import AppLayout from "../../components/AppLayout";
+import PostCard from "../../components/PostCard";
+import { LOAD_HASHTAG_POSTS_REQUEST } from "../../reducers/post";
+import { LOAD_MY_INFO_REQUEST } from "../../reducers/user";
+
+const Hashtag = () => {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { tag } = router.query;
+  const { mainPosts, hasMorePosts, loadPostsLoading, retweetError } =
+    useSelector((state) => state.post);
+
+  useEffect(() => {
+    if (retweetError) {
+      alert(retweetError);
+    }
+  }, [retweetError]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (
+        window.scrollY + document.documentElement.clientHeight >
+        document.documentElement.scrollHeight - 300
+      ) {
+        if (hasMorePosts && !loadPostsLoading) {
+          const lastId = mainPosts[mainPosts.length - 1]?.id;
+          dispatch({
+            type: LOAD_HASHTAG_POSTS_REQUEST,
+            lastId,
+            data: tag,
+          });
+        }
+      }
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [hasMorePosts, loadPostsLoading]);
+  return (
+    <AppLayout>
+      {mainPosts.map((post) => (
+        <PostCard key={post.id} post={post} />
+      ))}
+    </AppLayout>
+  );
+};
+
+export const getServerSideProps = wrapper.getServerSideProps(
+  (store) =>
+    async ({ req, query }) => {
+      const cookie = req ? req.headers.cookie : "";
+      axios.defaults.headers.Cookie = "";
+      if (req && cookie) {
+        axios.defaults.headers.Cookie = cookie;
+      }
+      store.dispatch({ type: LOAD_MY_INFO_REQUEST });
+      store.dispatch({ type: LOAD_HASHTAG_POSTS_REQUEST, data: query.tag });
+      store.dispatch(END);
+      await store.sagaTask.toPromise();
+    }
+);
+export default Hashtag;
+```
+
+* `LOAD_HASHTAG_POSTS_REQUEST`: state에 해시태그에 해당되는 글(`mainPosts`) 저장 -> `Hashtag`와 `PostCard` 컴포넌트에서 사용
+
+### state 재사용
+
+`LOAD_USER_POSTS_xxx`, `LOAD_HASHTAG_POSTS_xxx`, `LOAD_POSTS_xxx`는 조건만 다르지 모두 포스트를 로드한다는 점은 동일하다. 같은 페이지에서 세 가지 중 두 가지 액션 이상이 dispatch되는 경우가 아니라면 state를 재사용함으로써 코드가 중복되는 것을 막을 수 있다.
+
+```js
+// front/reducers/post.js
+case LOAD_USER_POSTS_REQUEST:
+case LOAD_HASHTAG_POSTS_REQUEST:
+case LOAD_POSTS_REQUEST:
+  draft.loadPostsLoading = true;
+  draft.loadPostsDone = false;
+  draft.loadPostsError = null;
+  break;
+case LOAD_USER_POSTS_SUCCESS:
+case LOAD_HASHTAG_POSTS_SUCCESS:
+case LOAD_POSTS_SUCCESS:
+  draft.loadPostsLoading = false;
+  draft.loadPostsDone = true;
+  draft.mainPosts = draft.mainPosts.concat(action.data);
+  draft.hasMorePosts = action.data.length === 10;
+  break;
+case LOAD_USER_POSTS_FAILURE:
+case LOAD_HASHTAG_POSTS_FAILURE:
+case LOAD_POSTS_FAILURE:
+  draft.loadPostsLoading = false;
+  draft.loadPostsError = action.error;
+  break;
+```
+

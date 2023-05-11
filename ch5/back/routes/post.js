@@ -17,6 +17,7 @@ try {
 
 router.get("/:postId", async (req, res, next) => {
   try {
+    console.log(req.params.postId);
     const post = await Post.findOne({
       where: { id: Number(req.params.postId) },
     });
@@ -38,7 +39,7 @@ router.get("/:postId", async (req, res, next) => {
       ],
     });
 
-    res.status(201).json(fullPost);
+    res.status(200).json(fullPost);
   } catch (error) {
     console.error(error);
     next(error);

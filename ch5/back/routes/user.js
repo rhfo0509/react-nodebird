@@ -1,8 +1,8 @@
 const express = require("express");
 const passport = require("passport");
 const bcrypt = require("bcrypt");
-
-const { User, Post } = require("../models");
+const { Op } = require("sequelize");
+const { User, Post, Comment, Image } = require("../models");
 const { isLoggedIn, isNotLoggedIn } = require("./middlewares");
 
 const router = express.Router();
@@ -48,7 +48,7 @@ router.delete("/follower/:userId", isLoggedIn, async (req, res, next) => {
     console.error(error);
     next(error);
   }
-})
+});
 
 router.get("/followers", isLoggedIn, async (req, res, next) => {
   try {
@@ -72,6 +72,53 @@ router.get("/followings", isLoggedIn, async (req, res, next) => {
     }
     const followings = await user.getFollowings();
     res.status(200).json(followings);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+router.get("/:userId/posts", async (req, res, next) => {
+  try {
+    const user = await User.findByPk(Number(req.params.userId));
+    if (!user) {
+      return res.status(403).send("존재하지 않는 사용자입니다.");
+    }
+
+    const where = {};
+    if (Number(req.query.lastId)) {
+      where.id = { [Op.lt]: Number(req.query.lastId) };
+    }
+    const posts = await Post.findAll({
+      where,
+      limit: 10,
+      order: [
+        ["createdAt", "DESC"],
+        [Comment, "createdAt", "DESC"],
+      ],
+      include: [
+        {
+          model: User,
+          attributes: ["id", "nickname"],
+          where: { id: user.id }
+        },
+        {
+          model: Comment,
+          include: [{ model: User, attributes: ["id", "nickname"] }],
+        },
+        { model: Image },
+        { model: User, attributes: ["id"], as: "Likers" },
+        {
+          model: Post,
+          as: "Retweet",
+          include: [
+            { model: User, attributes: ["id", "nickname"] },
+            { model: Image },
+          ],
+        },
+      ],
+    });
+    res.status(200).json(posts);
   } catch (error) {
     console.error(error);
     next(error);
