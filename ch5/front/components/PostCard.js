@@ -10,6 +10,7 @@ import {
   RetweetOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
+import moment from "moment";
 
 import PostImages from "./PostImages";
 import CommentForm from "./CommentForm";
@@ -21,6 +22,8 @@ import {
   LIKE_POST_REQUEST,
   UNLIKE_POST_REQUEST,
 } from "../reducers/post";
+
+moment.locale("ko");
 
 const PostCard = ({ post }) => {
   const dispatch = useDispatch();
@@ -111,6 +114,9 @@ const PostCard = ({ post }) => {
               )
             }
           >
+            <div style={{ float: "right" }}>
+              {moment(post.createdAt).format("YYYY.MM.DD")}
+            </div>
             <Card.Meta
               avatar={
                 <Link href={`/user/${post.Retweet.User.id}`}>
@@ -124,17 +130,22 @@ const PostCard = ({ post }) => {
             />
           </Card>
         ) : (
-          <Card.Meta
-            avatar={
-              <Link href={`/user/${post.User.id}`}>
-                <a>
-                  <Avatar>{post.User.nickname[0]}</Avatar>
-                </a>
-              </Link>
-            }
-            title={post.User.nickname}
-            description={<PostCardContent postData={post.content} />}
-          />
+          <>
+            <div style={{ float: "right" }}>
+              {moment(post.createdAt).format("YYYY.MM.DD")}
+            </div>
+            <Card.Meta
+              avatar={
+                <Link href={`/user/${post.User.id}`}>
+                  <a>
+                    <Avatar>{post.User.nickname[0]}</Avatar>
+                  </a>
+                </Link>
+              }
+              title={post.User.nickname}
+              description={<PostCardContent postData={post.content} />}
+            />
+          </>
         )}
       </Card>
       {commentFormOpened && (

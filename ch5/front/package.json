@@ -6,16 +6,18 @@
   "scripts": {
     "dev": "next",
     "start": "next start",
-    "build": "next build"
+    "build": "cross-env ANALYZE=true NODE_ENV=production next build"
   },
   "author": "bear",
   "license": "ISC",
   "dependencies": {
     "@ant-design/icons": "^4.8.0",
+    "@next/bundle-analyzer": "^13.4.2",
     "antd": "^4.24.8",
     "axios": "^1.3.5",
     "babel-plugin-styled-components": "^2.1.1",
     "immer": "^9.0.21",
+    "moment": "^2.29.4",
     "next": "^12.1.0",
     "next-redux-wrapper": "^8.1.0",
     "prop-types": "^15.8.1",
@@ -28,7 +30,8 @@
     "redux-devtools-extension": "^2.13.9",
     "redux-saga": "^1.2.3",
     "shortid": "^2.2.16",
-    "styled-components": "^5.3.9"
+    "styled-components": "^5.3.9",
+    "swr": "^2.1.5"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",

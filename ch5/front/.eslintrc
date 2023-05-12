@@ -35,6 +35,8 @@
     "import/no-extraneous-dependencies": "off",
     "operator-linebreak": "off",
     "no-alert": "off",
-    "implicit-arrow-linebreak": "off"
+    "implicit-arrow-linebreak": "off",
+    "react/jsx-props-no-spreading": "off",
+    "react/no-array-index-key": "off"
   }
 }

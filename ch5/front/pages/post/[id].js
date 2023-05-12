@@ -13,6 +13,11 @@ import PostCard from "../../components/PostCard";
 
 const Post = () => {
   const router = useRouter();
+
+  // if (router.isFallback) {
+  //   return <div>로딩중...</div>;
+  // }
+
   const { id } = router.query;
   const { singlePost } = useSelector((state) => state.post);
   return (
@@ -43,16 +48,23 @@ const Post = () => {
   );
 };
 
+// export async function getStaticPaths() {
+//   return {
+//     paths: [{ params: { id: "1" } }],
+//     fallback: true,
+//   };
+// }
+
 export const getServerSideProps = wrapper.getServerSideProps(
   (store) =>
-    async ({ req, query }) => {
+    async ({ req, params }) => {
       const cookie = req ? req.headers.cookie : "";
       axios.defaults.headers.Cookie = "";
       if (req && cookie) {
         axios.defaults.headers.Cookie = cookie;
       }
       store.dispatch({ type: LOAD_MY_INFO_REQUEST });
-      store.dispatch({ type: LOAD_POST_REQUEST, data: query.id });
+      store.dispatch({ type: LOAD_POST_REQUEST, data: params.id });
       store.dispatch(END);
       await store.sagaTask.toPromise();
     }

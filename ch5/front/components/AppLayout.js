@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useCallback } from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
+import Router from "next/router";
 import { Input, Menu, Row, Col } from "antd";
 import styled from "styled-components";
 import { useSelector } from "react-redux";
+import useInput from "../hooks/useInput";
 
 import UserProfile from "./UserProfile";
 import LoginForm from "./LoginForm";
@@ -13,6 +15,10 @@ const SearchInput = styled(Input.Search)`
 `;
 
 const AppLayout = ({ children }) => {
+  const [searchInput, onChangeSearchInput] = useInput("");
+  const onSearch = useCallback(() => {
+    Router.push(`/hashtag/${searchInput}`);
+  }, [searchInput]);
   const me = useSelector((state) => state.user.me);
 
   return (
@@ -29,12 +35,12 @@ const AppLayout = ({ children }) => {
           </Link>
         </Menu.Item>
         <Menu.Item>
-          <SearchInput enterButton />
-        </Menu.Item>
-        <Menu.Item>
-          <Link href="/signup">
-            <a>회원가입</a>
-          </Link>
+          <SearchInput
+            enterButton
+            value={searchInput}
+            onChange={onChangeSearchInput}
+            onSearch={onSearch}
+          />
         </Menu.Item>
       </Menu>
       <Row>

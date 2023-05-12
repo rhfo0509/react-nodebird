@@ -87,15 +87,15 @@ const User = () => {
 
 export const getServerSideProps = wrapper.getServerSideProps(
   (store) =>
-    async ({ req, query }) => {
+    async ({ req, params }) => {
       const cookie = req ? req.headers.cookie : "";
       axios.defaults.headers.Cookie = "";
       if (req && cookie) {
         axios.defaults.headers.Cookie = cookie;
       }
       store.dispatch({ type: LOAD_MY_INFO_REQUEST });
-      store.dispatch({ type: LOAD_USER_REQUEST, data: query.id });
-      store.dispatch({ type: LOAD_USER_POSTS_REQUEST, data: query.id });
+      store.dispatch({ type: LOAD_USER_REQUEST, data: params.id });
+      store.dispatch({ type: LOAD_USER_POSTS_REQUEST, data: params.id });
       store.dispatch(END);
       await store.sagaTask.toPromise();
     }

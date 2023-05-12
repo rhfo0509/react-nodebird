@@ -310,14 +310,14 @@ const Post = () => {
 
 export const getServerSideProps = wrapper.getServerSideProps(
   (store) =>
-    async ({ req, query }) => {
+    async ({ req, params }) => {
       const cookie = req ? req.headers.cookie : "";
       axios.defaults.headers.Cookie = "";
       if (req && cookie) {
         axios.defaults.headers.Cookie = cookie;
       }
       store.dispatch({ type: LOAD_MY_INFO_REQUEST });
-      store.dispatch({ type: LOAD_POST_REQUEST, data: query.id });
+      store.dispatch({ type: LOAD_POST_REQUEST, data: params.id });
       store.dispatch(END);
       await store.sagaTask.toPromise();
     }
@@ -330,7 +330,7 @@ export default Post;
 
 ![image](https://github.com/ZeroCho/react-nodebird/assets/85874042/918890a2-72f5-4efb-8e5f-3897fec747a4)
 
-Head 안에 있는 부분은 알아서 서버 사이드 렌더링이 되기 때문에 검색엔진이 읽을 수 있게 된다. `og:`에는 공유를 했을 때 보여지는 부분을 설정할 수 있다.
+`Head` 안에 있는 부분은 알아서 서버 사이드 렌더링이 되기 때문에 검색엔진이 읽을 수 있게 된다. `og:`에는 공유를 했을 때 보여지는 부분을 설정할 수 있다.
 
 ---
 
@@ -497,15 +497,15 @@ const User = () => {
 
 export const getServerSideProps = wrapper.getServerSideProps(
   (store) =>
-    async ({ req, query }) => {
+    async ({ req, params }) => {
       const cookie = req ? req.headers.cookie : "";
       axios.defaults.headers.Cookie = "";
       if (req && cookie) {
         axios.defaults.headers.Cookie = cookie;
       }
       store.dispatch({ type: LOAD_MY_INFO_REQUEST });
-      store.dispatch({ type: LOAD_USER_REQUEST, data: query.id });
-      store.dispatch({ type: LOAD_USER_POSTS_REQUEST, data: query.id });
+      store.dispatch({ type: LOAD_USER_REQUEST, data: params.id });
+      store.dispatch({ type: LOAD_USER_POSTS_REQUEST, data: params.id });
       store.dispatch(END);
       await store.sagaTask.toPromise();
     }
@@ -581,14 +581,14 @@ const Hashtag = () => {
 
 export const getServerSideProps = wrapper.getServerSideProps(
   (store) =>
-    async ({ req, query }) => {
+    async ({ req, params }) => {
       const cookie = req ? req.headers.cookie : "";
       axios.defaults.headers.Cookie = "";
       if (req && cookie) {
         axios.defaults.headers.Cookie = cookie;
       }
       store.dispatch({ type: LOAD_MY_INFO_REQUEST });
-      store.dispatch({ type: LOAD_HASHTAG_POSTS_REQUEST, data: query.tag });
+      store.dispatch({ type: LOAD_HASHTAG_POSTS_REQUEST, data: params.tag });
       store.dispatch(END);
       await store.sagaTask.toPromise();
     }
@@ -600,7 +600,7 @@ export default Hashtag;
 
 ### state 재사용
 
-`LOAD_USER_POSTS_xxx`, `LOAD_HASHTAG_POSTS_xxx`, `LOAD_POSTS_xxx`는 조건만 다르지 모두 포스트를 로드한다는 점은 동일하다. 같은 페이지에서 세 가지 중 두 가지 액션 이상이 dispatch되는 경우가 아니라면 state를 재사용함으로써 코드가 중복되는 것을 막을 수 있다.
+`LOAD_USER_POSTS_xxx`, `LOAD_HASHTAG_POSTS_xxx`, `LOAD_POSTS_xxx`는 조건만 다르지 모두 포스트를 로드한다는 점은 동일하다. 같은 페이지에서 위 세 가지 중 두 가지 액션 이상이 dispatch되는 경우가 아니라면 state를 재사용함으로써 코드를 간소화할 수 있다.
 
 ```js
 // front/reducers/post.js
@@ -626,4 +626,231 @@ case LOAD_POSTS_FAILURE:
   draft.loadPostsError = action.error;
   break;
 ```
+
+---
+
+## getStaticPaths
+
+정적 페이지에서의 **dynamic routing**을 구현하기 위해서 `getStaticProps`와 같이 사용되는 함수이다.
+
+```js
+export async function getStaticPaths() {
+  return {
+    paths: [
+      { params: { id: "1" } },
+      { params: { id: "2" } },
+    ],
+    fallback: false,
+  };
+}
+```
+
+* **paths**: 어떤 페이지들을 빌드 타임에 생성할지 설정<br>
+위처럼 작성 시 빌드 타임에 `post/1`, `post/2` 페이지가 정적으로 생성된다.
+
+* **fallback**<br>
+`false`: 미리 만들어주지 않은 페이지에 접근 시 404<br>
+`true`: 미리 만들어주지 않은 페이지에 접근 시 `getStaticProps` 내의 코드 실행
+
+```js
+const router = useRouter();
+if (router.isFallback) {
+  return <div>로딩중...</div>;
+}
+```
+
+> `getStaticProps` 내의 코드 실행 중일 때는 `isFallback`가 `true`가 되어 return문이 실행되고, 코드 실행이 끝나 데이터를 정상적으로 가져오면 `isFallback`이 `false`가 되어 완전한 페이지를 보여준다.
+
+> 왜인지 모르겠지만 미리 만들어주지 않은 페이지에 접근 시에 `singlePost` 값이 제대로 반영이 안되는 것 같다...
+
+---
+
+## SWR 사용해보기
+
+**데이터 가져오기(data fetching)를 위한 라이브러리**<br>
+
+### 설치
+
+**front** ->  `npm i swr`
+
+### 사용
+
+`const { data, error } = useSWR(key, fetcher)`
+
+* `key`: 요청을 보낼 주소
+* `fetcher`: `key`를 받아 데이터를 반환하는 비동기 함수(Axios, GraphOL와 같은 라이브러리 사용 가능)
+* `data`: `useSWR`에 의해 반환된 데이터
+* `error`: 데이터를 가져오는 과정에서 오류가 발생할 시 반환
+
+```js
+// front/pages/profile.js
+const fetcher = (url) =>
+  axios.get(url, { withCredentials: true }).then((result) => result.data);
+
+const profile = () => {
+  const [followersLimit, setFollowersLimit] = useState(3);
+  const [followingsLimit, setFollowingsLimit] = useState(3);
+  const { data: followersData, error: followerError } = useSWR(
+    `http://localhost:3065/user/followers?limit=${followersLimit}`,
+    fetcher
+  );
+  const { data: followingsData, error: followingError } = useSWR(
+    `http://localhost:3065/user/followings?limit=${followingsLimit}`,
+    fetcher
+  );
+  const { me } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (!(me && me.id)) {
+      Router.replace("/");
+    }
+  }, [me && me.id]);
+
+  const loadMoreFollowers = useCallback(() => {
+    setFollowersLimit((prev) => prev + 3);
+  }, []);
+
+  const loadMoreFollowings = useCallback(() => {
+    setFollowingsLimit((prev) => prev + 3);
+  }, []);
+
+  if (followerError || followingError) {
+    console.error(followerError || followingError);
+    return <div>팔로잉/팔로워 로딩 중 에러가 발생하였습니다.</div>;
+  }
+
+  if (!me) {
+    return <div>내 정보 로딩중...</div>;
+  }
+
+  return (
+    <>
+      <Head>
+        <title>내 프로필 | NodeBird</title>
+      </Head>
+      <AppLayout>
+        <NicknameEditForm />
+        <FollowList
+          header="팔로잉 목록"
+          data={followingsData}
+          onClickMore={loadMoreFollowings}
+          loading={!(followingsData || followingError)}
+        />
+        <FollowList
+          header="팔로워 목록"
+          data={followersData}
+          onClickMore={loadMoreFollowers}
+          loading={!(followersData || followerError)}
+        />
+      </AppLayout>
+    </>
+  );
+};
+``` 
+
+1. 기본적으로 보여지는 팔로워/팔로잉 수를 3으로 설정
+2. 더보기 버튼 클릭 시 `loadMoreFollowings`/`loadMoreFollowers`가 실행되면서 `followersLimit`/`followingsLimit`이 3씩 증가됨
+3. limit이 변경됨 -> `useSWR`의 key 값이 변경되어 fetcher 함수 실행
+4. fetcher 함수 실행 중에는 data와 error 둘다 비어 있는 경우 loading이 `true`가 됨
+5. fetcher 함수의 실행이 끝나 data에 값이 채워질 때 loading이 `false`가 되어 화면에 데이터가 채워짐
+
+기본적으로 CSR로 동작하지만, `useSWR`의 세 번째 옵션으로 initialData를 주게 되면 SSR로 동작이 된다.
+
+```js
+export async function getServerSideProps() {
+  const data = await fetcher("/api/data");
+  return { props: { data } }
+}
+
+function App(props) {
+  const initialData = props.data;
+  const { data } = useSWR("/api/data", fetcher, { initialData });
+}
+```
+
+`getServerSideProps`에서 서버로부터 받은 데이터를 props에 담아 return -> 컴포넌트에 props가 전달되어 그 안의 data를 꺼낼 수 있음
+
+> `useEffect`과 같은 Hook의 경우 return문보다는 상위에 위치해야 한다. return문에 의해 Hook이 실행되지 않는 경우가 없어야 한다.
+
+---
+
+## moment와 next 빌드하기
+
+### `moment.js`
+
+날짜 라이브러리의 대표주자, 불변성과 용량 문제를 이유로 `date-fns`나 `dayjs`를 대안으로 사용하기도 한다.
+> `moment.js` 대신 `dayjs`? : https://luke-tofu.tistory.com/entry/Goodbye-Moment-feat-Dayjs
+
+#### 설치
+
+**front** -> `npm i moment`
+
+#### 사용
+
+`moment.locale("ko")`: 날짜를 포맷했을 때 한글로 표시
+
+```html
+<!-- 작성일자를 YYYY.MM.DD 형식으로 포맷 -->
+<div style={{ float: "right" }}>
+  {moment(post.createdAt).format("YYYY.MM.DD")}
+</div>
+```
+
+### next 빌드하기
+
+* 빌드: `redux-devtools`, `hot reload`, `code spliting` 등 next가 즉석에서 하는 것들을 미리 준비를 해두는 과정 -> 빌드 후 나오는 html/css/js 파일을 실제로 배포함<br>
+개발에 필요한 것들을 빼버리고 실제 필요한 것들만 남겨둔다.
+
+┌ `npm run bulid`
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/391f5e54-9fbe-48f4-b291-aaae544f4208)
+
+각 페이지별로 1MB를 넘지 않으면 실제로 서비스하는 데 문제가 없음
+(1MB가 넘어가면 `React.lazy`나 `Suspense`로 코드를 분할하는 것이 좋다.)
+
+> [**production**]404 및 500 페이지 커스터마이징 참고: https://nextjs.org/docs/pages/building-your-application/routing/custom-error -> 에러 메시지를 노출하지 않도록 설정
+
+---
+
+## 커스텀 웹팩과 bundle-analyzer
+
+### 설치
+
+`npm i @next/bundle-analyzer cross-env`
+
+### 커스텀 웹팩 및 bundle-analyzer 설정
+
+next가 정해 놓은 기본 웹팩 설정(`config`)을 바꾸는 방식으로 해야 한다. (**불변성**을 지켜야 함 -> immer 사용 가능)
+
+```js
+// front/next.config.js
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
+module.exports = withBundleAnalyzer({
+  compress: true,
+  webpack(config, { webpack }) {
+    const prod = process.env.NODE_ENV === "production";
+    const plugins = [...config.plugins];
+    return {
+      ...config,
+      mode: prod ? "production" : "development",
+      devtool: prod ? "hidden-source-map" : "eval",
+      plugins,
+    };
+  },
+});
+```
+`module.exports`를 `withBundleAnalyzer`로 감싸준다.
+
+* `compress: true` -> html/css/js 파일을 gzip으로 압축, 압축된 파일은 브라우저가 알아서 해제
+
+### bundle-analyzer
+
+`npm run build`를 통해 빌드된 페이지와 공통 모듈들의 크기를 알 수 있지만
+이 때 `bundle-analyzer`를 이용하면 빌드했을 때 각 번들별로 사이즈를 확인할 수 있다.
+
+#### process.ENV 설정
+
+
 

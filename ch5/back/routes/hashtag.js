@@ -4,7 +4,7 @@ const { Op } = require("sequelize");
 
 const router = express.Router();
 
-router.get("/:tag/posts", async (req, res, next) => {
+router.get("/:tag", async (req, res, next) => {
   try {
     const where = {};
     if (Number(req.query.lastId)) {
