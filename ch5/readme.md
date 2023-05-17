@@ -93,7 +93,7 @@ const rootReducer = (state, action) => {
 };
 ```
 
-> **`combineReducers`**는 `(...reducers) => (state, action) => state`의 고차 함수 꼴이기 때문에 **`combinedReducer`**의 형태는 `(state, action) => state`가 된다.<br>
+> `combineReducers`는 `(...reducers) => (state, action) => state`의 고차 함수 꼴이기 때문에 `combinedReducer`의 형태는 `(state, action) => state`가 된다.<br>
 > 마지막에 `combineReducer(state, action)`로 호출하면 완성된 **state**가 나오게 된다.
 
 #### 문제점(2)
@@ -162,7 +162,8 @@ const cookie = req ? req.headers.cookie : "";
 axios.defaults.headers.Cookie = cookie;
 ```
 
-이런 식으로만 작성하면 `getServerSideProps`를 안 쓰는 페이지가 있을 때 그 페이지에 접속하면 쿠키가 초기화되지 않아서 이전 로그인된 사용자 정보가 유지되는 문제가 발생 + Cookie가 빈 값일때도 axios가 빈 값은 무시해버려서 문제가 발생함 (질문하기)
+이런 식으로만 작성하면 `getServerSideProps`를 안 쓰는 페이지가 있을 때 그 페이지에 접속하면 쿠키가 초기화되지 않아서 이전 로그인된 사용자 정보가 유지되는 문제가 발생 + Cookie가 빈 값일때도 axios가 빈 값은 무시해버려서 문제가 발생함<br>
+따라서 매번 `axios.defaults`에 설정된 쿠키를 지우고, 요청 및 쿠키가 존재할 때만 다시 설정을 해준다.
 
 ---
 
@@ -221,7 +222,7 @@ export const getStaticProps = wrapper.getStaticProps((store) => async () => {
 export default Profile;
 ```
 
-> `getStaticProps`의 경우 사용할 수 있는 경우가 한정적임 -> 로그인 여부에 따라 보여지는 부분이 달라지거나, 게시글의 댓글이나 좋아요처럼 실시간으로 반영되야 할 부분이 있는 경우 `getServerSideProps`를 적용해야 한다.
+> `getStaticProps`의 경우 사용할 수 있는 경우가 한정적임 -> 특정 조건에 따라 보여지는 부분이 달라지거나, 게시글의 댓글이나 좋아요처럼 실시간으로 반영되야 할 부분이 있는 경우 `getServerSideProps`를 적용해야 한다.
 
 ```js
 // back/routes/user.js
@@ -326,7 +327,7 @@ export const getServerSideProps = wrapper.getServerSideProps(
 export default Post;
 ```
 
-`useRouter` Hook을 통해 라우터 객체를 만들면, `http://localhost:3000/post/[id]`로 접근했을 때 **[id]** 부분을 `router.query.id`로 얻어낼 수 있다.
+`useRouter` Hook을 통해 라우터 객체를 만들면, `http://localhost:3000/post/[id]`로 접근했을 때 **[id]** 부분을 `router.query.id`로 얻어낼 수 있다. `getServerSideProps`에서는 `params.id`를 통해 얻어낸다.
 
 ![image](https://github.com/ZeroCho/react-nodebird/assets/85874042/918890a2-72f5-4efb-8e5f-3897fec747a4)
 
@@ -411,6 +412,8 @@ export default class MyDocument extends Document {
   }
 }
 ```
+
+chrome에서 disable javascript한 이후에도 css가 정상적으로 로드가 된다면 css 서버사이드렌더링이 성공적으로 된 것이다.
 
 ---
 
@@ -600,7 +603,7 @@ export default Hashtag;
 
 ### state 재사용
 
-`LOAD_USER_POSTS_xxx`, `LOAD_HASHTAG_POSTS_xxx`, `LOAD_POSTS_xxx`는 조건만 다르지 모두 포스트를 로드한다는 점은 동일하다. 같은 페이지에서 위 세 가지 중 두 가지 액션 이상이 dispatch되는 경우가 아니라면 state를 재사용함으로써 코드를 간소화할 수 있다.
+`LOAD_USER_POSTS_xxx`, `LOAD_HASHTAG_POSTS_xxx`, `LOAD_POSTS_xxx`는 조건만 다를 뿐 모두 포스트를 로드한다는 점은 동일하다. 같은 페이지에서 위 세 가지 중 두 가지 액션 이상이 dispatch되는 경우가 아니라면 state를 재사용함으로써 코드를 간소화할 수 있다.
 
 ```js
 // front/reducers/post.js
@@ -778,8 +781,8 @@ function App(props) {
 
 ### `moment.js`
 
-날짜 라이브러리의 대표주자, 불변성과 용량 문제를 이유로 `date-fns`나 `dayjs`를 대안으로 사용하기도 한다.
-> `moment.js` 대신 `dayjs`? : https://luke-tofu.tistory.com/entry/Goodbye-Moment-feat-Dayjs
+날짜 라이브러리의 대표주자, 최근에는 불변성과 용량 문제를 이유로 `date-fns`나 `dayjs`를 대안으로 사용하는 추세이다.
+> `moment.js` 대신 `dayjs` : https://luke-tofu.tistory.com/entry/Goodbye-Moment-feat-Dayjs
 
 #### 설치
 
@@ -801,7 +804,7 @@ function App(props) {
 * 빌드: `redux-devtools`, `hot reload`, `code spliting` 등 next가 즉석에서 하는 것들을 미리 준비를 해두는 과정 -> 빌드 후 나오는 html/css/js 파일을 실제로 배포함<br>
 개발에 필요한 것들을 빼버리고 실제 필요한 것들만 남겨둔다.
 
-┌ `npm run bulid`
+┌ `npm run bulid`<br>
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/391f5e54-9fbe-48f4-b291-aaae544f4208)
 
 각 페이지별로 1MB를 넘지 않으면 실제로 서비스하는 데 문제가 없음
@@ -819,7 +822,7 @@ function App(props) {
 
 ### 커스텀 웹팩 및 bundle-analyzer 설정
 
-next가 정해 놓은 기본 웹팩 설정(`config`)을 바꾸는 방식으로 해야 한다. (**불변성**을 지켜야 함 -> immer 사용 가능)
+next가 정해 놓은 기본 웹팩 설정(`config`)을 바꾸는 방식으로 커스터마이징한다. (**불변성**을 지켜야 함 -> immer 사용 가능)
 
 ```js
 // front/next.config.js
@@ -843,14 +846,42 @@ module.exports = withBundleAnalyzer({
 ```
 `module.exports`를 `withBundleAnalyzer`로 감싸준다.
 
-* `compress: true` -> html/css/js 파일을 gzip으로 압축, 압축된 파일은 브라우저가 알아서 해제
+* `compress: true` -> html/css/js 파일을 `gzip`으로 압축하여 용량을 줄임, 압축된 파일은 브라우저가 알아서 해제한다.
 
 ### bundle-analyzer
 
-`npm run build`를 통해 빌드된 페이지와 공통 모듈들의 크기를 알 수 있지만
-이 때 `bundle-analyzer`를 이용하면 빌드했을 때 각 번들별로 사이즈를 확인할 수 있다.
+`npm run build`를 통해 빌드된 페이지 및 번들링된 모듈의 전반적인 크기를 파악할 수 있음<br>
 
-#### process.ENV 설정
+이 때 `bundle-analyzer`를 이용하면 번들에서 어떤 요소가 얼마나 용량을 차지하는지를 알 수 있다.
 
+#### process.ENV 설정(`cross-env`)
 
+`.env` 대신 `package.json` 내에서 직접 `process.ENV`를 설정할 수 있다.
 
+```json
+// front/package.json
+{
+  "scripts": {
+    "dev": "next",
+    "start": "next start",
+    "build": "cross-env ANALYZE=true NODE_ENV=production next build"
+  },
+}
+```
+이러한 방식은 기본적으로 맥과 리눅스에만 적용되기 때문에 `cross-env`를 통해 윈도우에도 작동되도록 할 수 있다.
+
+#### 실행
+
+1. **서버** -> 서버 측은 용량이 커도 크게 문제되지 않는다.
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/16a03f1c-6b72-4730-a232-367932ab4e34)
+
+2. **클라이언트** -> 사용자와 직결되는 부분이기 때문에 클라이언트 측 용량이 커지는 것은 문제가 됨
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/92859253-0383-48bd-8d22-bbb46ec45360)
+
+`concatenated`의 경우 이미 합쳐져 있는 것이기 때문에 없애기 힘들고, 대신 `moment`의 `locale`에서 한국어팩(`ko.js`)를 제외한 나머지 언어팩을 없앤다면 용량이 많이 줄어들 것이다.
+
+> 해결방법: plugin에 `new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /^\.\/ko$/)` 추가
+
++ 게시글 수정하기, 신고하기 부분 스스로 해보기
