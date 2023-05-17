@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "next",
-    "start": "next start",
+    "start": "cross-env NODE_ENV=production next start",
     "build": "cross-env ANALYZE=true NODE_ENV=production next build"
   },
   "author": "bear",
