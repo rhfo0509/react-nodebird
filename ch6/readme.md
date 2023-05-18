@@ -189,3 +189,13 @@ export const backUrl = "13.124.225.211";
 
 기존 백엔드 주소(`http://localhost:3065`)를 사용하는 페이지 및 컴포넌트로 가서 그 부분을 전부 backUrl로 수정
 
+2. `npm start` 시 80번 포트로 실행되도록 변경
+```
+// front/package.json
+...
+"scripts": {
+  "dev": "next",
+  "start": "cross-env NODE_ENV=production next start -p 80",
+  "build": "cross-env ANALYZE=true NODE_ENV=production next build"
+}
+...
