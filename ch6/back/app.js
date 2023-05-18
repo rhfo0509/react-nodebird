@@ -33,7 +33,10 @@ if (process.env.NODE_ENV === "production") {
   app.use(morgan("dev"));
 }
 app.use(
-  cors({ origin: ["nodebird.site", "http://13.209.98.165"], credentials: true })
+  cors({
+    origin: ["http://localhost:3000", "http://nodebird.site"],
+    credentials: true,
+  })
 );
 app.use(express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
@@ -44,6 +47,12 @@ app.use(
     saveUninitialized: false,
     resave: false,
     secret: process.env.COOKIE_SECRET,
+    cookie: {
+      httpOnly: true,   // 자바스크립트로 접근 불가
+      secure: false,    // https 적용할 때 true
+      // app.nodebird.site 및 nodebird.site 사이에서 쿠키 공유가 됨
+      domain: process.env.NODE.ENV === "production" && ".nodebird.site", 
+    },
   })
 );
 app.use(passport.initialize());

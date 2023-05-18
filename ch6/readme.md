@@ -205,7 +205,7 @@ export const backUrl = "13.124.225.211";
 ```js
 // back/app.js
 app.use(
-  cors({ origin: ["nodebird.site", "http://13.209.98.165"], credentials: true })
+  cors({ origin: ["http://localhost:3000", "http://13.209.98.165"], credentials: true })
 );
 ...
 app.listen(80, () => {
@@ -216,3 +216,68 @@ app.listen(80, () => {
 3. pm2를 통해 프론트 서버를 시작
 
 `npx pm2 start npm -- start`
+
+---
+
+## 도메인 연결하기
+
+### 새로고침하면 로그인이 풀림
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/780c0c16-2347-4f90-940b-078bca0ab3e8)
+
+### 도메인 구매하기
+
+도메인 구매 후 
+
+**Route 53** -> 호스팅 영역 -> 호스팅 영역 생성 -> 도메인 이름 넣어서 나온 네임 서버(NS) -> 도메인을 구매한 곳으로 가서 네임 서버 변경
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/02d847a2-9c27-4e85-943e-3fd5547497aa)
+
+### 인스턴스 아이피 고정하기
+
+**EC2** -> 네트워크 및 보안 -> 탄력적 IP
+
+탄력적 IP를 2개 만든 후, [탄력적 IP 주소 연결]을 통해 인스턴스 하나 당 IP를 연결시킴 -> 무료로 사용 가능
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/ac4c8654-3f06-4902-a67f-877316abf1a2)
+
+> **주의** : 인스턴스 제거 시 반드시 탄력적 IP도 같이 제거해야 한다. 
+
+### 도메인 주소와 IP 주소 매핑
+
+**Route 53**의 호스팅 영역으로 가서 **A** 레코드 생성 -> 백엔드 서버와 연결한 IP의 도메인 주소는 `api.nodebird.site`로, 프론트 서버와 연결한 IP의 도메인 주소는 `nodebird.site`로 설정
+
+**CNAME**을 이용해 `www.nodebird.site`로 접속해도 `nodebird.site`로 이동이 되도록 할 수 있음
+
+### backUrl, origin 수정
+
+```js
+// front/config/config.js
+export const backUrl = "http://api.nodebird.site";
+```
+
+```js
+// back/app.js
+app.use(
+  cors({ origin: ["http://localhost:3000" ,"http://nodebird.site"], credentials: true })
+);
+```
+
+### 서버 간에 쿠키를 공유하기 위한 설정
+
+```js
+// back/app.js
+app.use(
+  session({
+    saveUninitialized: false,
+    resave: false,
+    secret: process.env.COOKIE_SECRET,
+    cookie: {
+      httpOnly: true,   // 자바스크립트로 접근 불가
+      secure: false,    // https 적용할 때 true
+      // app.nodebird.site 및 nodebird.site 사이에서 쿠키 공유가 됨
+      domain: process.env.NODE.ENV === "production" && ".nodebird.site",
+    },
+  })
+);
+```
