@@ -880,7 +880,8 @@ module.exports = withBundleAnalyzer({
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/92859253-0383-48bd-8d22-bbb46ec45360)
 
-`concatenated`의 경우 이미 합쳐져 있는 것이기 때문에 없애기 힘들고, 대신 `moment`의 `locale`에서 한국어팩(`ko.js`)를 제외한 나머지 언어팩을 없앤다면 용량이 많이 줄어들 것이다.
+`concatenated`의 경우 이미 합쳐져 있는 것이기 때문에 없애기 힘들고, 대신 `moment`의 `locale`에서 한국어팩(`ko.js`)를 제외한 나머지 언어팩을 없애는 것은 가능하다.<br>
+-> 이러한 과정을 **tree shaking**이라고 하며, 프로그램 실행에 영향을 주지 않는 코드를 빌드 단계에서 제거함으로써 번들 파일 크기를 최적화할 수 있다.
 
 > 해결방법: plugin에 `new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /^\.\/ko$/)` 추가
 

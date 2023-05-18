@@ -1,5 +1,6 @@
 node_modules/
 .next/
-uploads/
 .env
+uploads/
+react-nodebird-aws.pem
 react-nodebird.pem
