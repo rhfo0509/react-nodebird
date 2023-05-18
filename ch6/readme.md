@@ -199,3 +199,8 @@ export const backUrl = "13.124.225.211";
   "build": "cross-env ANALYZE=true NODE_ENV=production next build"
 }
 ...
+```
+
+3. pm2를 통해 프론트 서버를 시작
+
+`npx pm2 start npm -- start`

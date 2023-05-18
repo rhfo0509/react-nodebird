@@ -25,14 +25,16 @@ sequelize
   .catch(console.error);
 passportConfig();
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   app.use(morgan("combined"));
   app.use(hpp());
   app.use(helmet());
 } else {
   app.use(morgan("dev"));
 }
-app.use(cors({ origin: true, credentials: true }));
+app.use(
+  cors({ origin: ["nodebird.site", "http://13.209.98.165"], credentials: true })
+);
 app.use(express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
