@@ -1,8 +1,14 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { Button, Form, Input } from "antd";
 import { useSelector, useDispatch } from "react-redux";
-import { UPLOAD_IMAGES_REQUEST, REMOVE_IMAGE, ADD_POST_REQUEST } from "../reducers/post";
+import {
+  UPLOAD_IMAGES_REQUEST,
+  REMOVE_IMAGE,
+  ADD_POST_REQUEST,
+} from "../reducers/post";
 import useInput from "../hooks/useInput";
+
+import { backUrl } from "../config/config";
 
 const PostForm = () => {
   const { imagePaths, addPostDone } = useSelector((state) => state.post);
@@ -45,9 +51,12 @@ const PostForm = () => {
     dispatch({ type: UPLOAD_IMAGES_REQUEST, data: formData });
   }, []);
 
-  const onRemoveImage = useCallback((index) => () => {
-    dispatch({ type: REMOVE_IMAGE, data: index });
-  }, []);
+  const onRemoveImage = useCallback(
+    (index) => () => {
+      dispatch({ type: REMOVE_IMAGE, data: index });
+    },
+    []
+  );
 
   return (
     <Form
@@ -78,7 +87,11 @@ const PostForm = () => {
       <div>
         {imagePaths.map((v, i) => (
           <div key={v} style={{ display: "inline-block" }}>
-            <img src={`http://localhost:3065/${v}`} style={{ width: "200px" }} alt={v} />
+            <img
+              src={`http://${backUrl}/${v}`}
+              style={{ width: "200px" }}
+              alt={v}
+            />
             <div>
               <Button onClick={onRemoveImage(i)}>제거</Button>
             </div>

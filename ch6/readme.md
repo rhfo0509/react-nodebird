@@ -60,7 +60,7 @@ sudo apt-get install -y nodejs
 
 * 백엔드 서버에서도 같은 과정을 반복한다.
 
-> 소스코드 변경 시 과정 : (윈도우) `git push origin master` -> (AWS) `git pull` -> `npm i`(패키지 설치 시) -> `npm run build` -> `npm start`
+> 소스코드 변경 시 과정 : (윈도우) `git push origin master` -> (AWS) `git pull` -> `npm i`(패키지 설치 시) -> `npm run build`(프론트 서버) -> `npm start`
 >> 이러한 과정이 번거롭다면 **CI/CD** 툴을 통해 개발 및 배포 과정을 자동화할 수 있다.
 
 ---
@@ -169,5 +169,23 @@ if (process.env.NODE_ENV === 'production') {
 ```
 이제 `npm start` 시에 자동으로 개발 모드로 전환 및 pm2가 적용이 될 것이다.
 
+---
 
+## 프론트 서버 배포하기
+
+### `getStaticPath()`가 있는 about 페이지
+
+맨 처음 서버 배포 시에 db에 아무런 데이터가 없는 상태이기 때문에 `getStaticPath()`로 데이터를 불러오는 과정에서 에러가 발생하게 됨 -> 일단 없앤 뒤에 나중에 데이터가 생기면 about 페이지 추가
+
+### ㅋㅋ
+
+**프론트 서버는 백 서버가 켜져 있지 않으면 실행이 되지 않음**<br>
+
+1. 백엔드 주소를 변수로 둬서 관리
+
+```js
+export const backUrl = "13.124.225.211";
+```
+
+기존 백엔드 주소(`http://localhost:3065`)를 사용하는 페이지 및 컴포넌트로 가서 그 부분을 전부 backUrl로 수정
 
