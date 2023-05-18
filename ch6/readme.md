@@ -201,12 +201,16 @@ export const backUrl = "13.124.225.211";
 ...
 ```
 
-3. cors 해결을 위해 백엔드 측 cors origin 부분에 프론트 서버 주소 추가
+3. cors 해결을 위해 백엔드 측 cors origin 부분에 프론트 서버 주소 추가 + 3065 -> 80번 포트로 변경
 ```js
 // back/app.js
 app.use(
   cors({ origin: ["nodebird.site", "http://13.209.98.165"], credentials: true })
 );
+...
+app.listen(80, () => {
+  console.log("서버 실행 중");
+});
 ```
 
 3. pm2를 통해 프론트 서버를 시작
