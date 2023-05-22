@@ -1,12 +1,12 @@
 {
+  "/_app": "pages/_app.js",
   "/_document": "pages/_document.js",
+  "/post/[id]": "pages/post/[id].js",
   "/profile": "pages/profile.js",
   "/": "pages/index.js",
-  "/post/[id]": "pages/post/[id].js",
   "/hashtag/[tag]": "pages/hashtag/[tag].js",
-  "/_error": "pages/_error.js",
   "/user/[id]": "pages/user/[id].js",
   "/signup": "pages/signup.js",
-  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
   "/404": "pages/404.html"
 }
