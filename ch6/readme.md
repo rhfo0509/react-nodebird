@@ -260,10 +260,7 @@ AWS **EC2** -> 네트워크 및 보안 -> 탄력적 IP
 
 ```js
 // front/config/config.js
-export const backUrl =
-  process.env.NODE_ENV === "production"
-    ? "http://api.nodebird.site"
-    : "http://localhost:3065";
+export const backUrl = "http://api.nodebird.site";
 ```
 
 ```js
