@@ -25,14 +25,17 @@ sudo apt-get install -y nginx
 vim /etc/nginx/nginx.conf
 ```
 
-`nginx.conf` -> http 객체 내에 server를 만들어 자신의 도메인 및 프록시 포트를 가지고 다음과 같이 작성 (이 부분이 **리버스 프록시** 역할을 수행한다)
+`nginx.conf` -> http 객체 내에서 다음과 같이 작성 (도메인명과 프록시 포트는 자신이 설정한 대로 넣어줌)
+
+이 부분이 **리버스 프록시** 역할을 수행한다 (**80**번 포트로 온 요청을 **3000**번 포트를 사용하는 next 서버로 전달)
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/05d2d816-a3c3-4971-8ad1-b5a4ec5b64b6)
 
 ```
-sudo systemctl start nginx  // nginx 실행
-sudo lsof -i tcp:80 // nginx가 보이면 정상
+sudo systemctl start nginx
+sudo lsof -i tcp:80
 ```
+80번 포트를 nginx 프로세스가 차지하고 있는 것을 확인한 후 다음으로 넘어간다.
 
 ### Let's Encrypt
 
@@ -56,8 +59,6 @@ sudo certbot --nginx
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/6ae89518-b283-44b6-a170-a37f53cfd17d)
 
 이렇게 certbot이 작성한 코드가 추가되었음을 확인할 수 있다.
-* 443번 포트로 요청 -> 3000번 
-* 
 
 마지막으로 `package.json`을 열어서 start 부분의 포트 번호를 다시 3000으로 변경한다. (nginx가 80을 쓰기 때문에 next 서버의 포트 번호는 이제 3000)
 
@@ -75,7 +76,44 @@ sudo certbot --nginx
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/8169c817-fdbb-4ce4-8da3-218bec363e73)
 
-> 한 컴퓨터 내에서 프론트/백엔드 서버가 같이 있으면 *(wildcard)를 통해서 인증서를 발급받아야 하는데 이 때 http로 못받고 dns로 받아야 함. (* 인증서는 route53에서 txt 레코드 설정이 필요)
+> 한 컴퓨터 내에서 프론트/백엔드 서버를 같이 사용하는 경우 \*(wildcard)를 통해서 인증서를 발급받아야 함 -> 이 때 http가 아닌 dns 방식으로 받아야 하며, Route53에서 txt 레코드 설정이 필요하다.
+
+여기서도 `app.js` 파일을 열어 **80**으로 설정된 포트 번호를 **3065**(express 서버)로 바꿔준다.
+
+### Mixed Content Error
+
+**HTTPS**(`https://nodebird.site` - 브라우저)에서 **HTTP**(`http://api.nodebird.site/user/login` - 백엔드 서버)로 요청을 보낼 때 생기는 에러
+
+`front/config/config.js` -> `backUrl`를 http 대신 https로 작성한다.  
+
+### CORS Error
+
+CORS 문제는 **백엔드** 서버에서 발생하는 문제
+
+`back/app.js` -> cors의 origin 부분에 `http`로 적혀있는 주소를 `https`로 변경 + session cookie의 secure를 `true`로 설정(`https`를 통해서만 쿠키가 전송됨)
+
+### session cookie의 secure 적용이 안되는 문제
+
+* `vim app.js` -> `trust proxy` 및 session proxy를 `true`로 설정
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/9a5dfddb-9e70-4212-8c55-b2a26ea67d81)
+
+* `vim /etc/nginx/nginx.conf` -> `X-Forwarded-Proto $scheme` 추가
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/5bb366f4-b46f-4a7e-aeec-3d6bbba90a66)
+
+
+
+### prefetch 문제
+
+일반적으로 `Link` 컴포넌트의 경우 hover 시에 리소스가 사전에 로드됨(prefetch) -> 메인에 보이는 수많은 사용자와 해시태그가 prefetch되면 서버에 무리가 감
+
+`Link` 컴포넌트의 prefetch를 `false`로 설정하면 더 이상 prefetch되지 않는다.
+
+
+
+
+
 
 
 
