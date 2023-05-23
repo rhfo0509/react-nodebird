@@ -192,6 +192,18 @@ router.patch("/:postId", async (req, res, next) => {
       { content: req.body.content },
       { where: { id: post.id } }
     );
+    
+    const hashtags = req.body.content.match(/#[^\s]+/g);
+    if (hashtags) {
+      const result = await Promise.all(
+        hashtags.map((tag) =>
+          Hashtag.findOrCreate({
+            where: { name: tag.slice(1).toLowerCase() },
+          })
+        )
+      );
+      await post.addHashtags(result.map((v) => v[0]));
+    }
     res.status(200).json({ PostId: post.id, content: req.body.content });
   } catch (error) {
     console.error(error);

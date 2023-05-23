@@ -21,6 +21,7 @@ import {
   REMOVE_POST_REQUEST,
   LIKE_POST_REQUEST,
   UNLIKE_POST_REQUEST,
+  UPDATE_POST_REQUEST,
 } from "../reducers/post";
 
 moment.locale("ko");
@@ -33,6 +34,7 @@ const PostCard = ({ post }) => {
   const liked = post.Likers.find((v) => v.id === id);
 
   const [commentFormOpened, setCommentFormOpened] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   const onRetweet = useCallback(() => {
     if (!id) {
@@ -61,6 +63,27 @@ const PostCard = ({ post }) => {
     dispatch({ type: REMOVE_POST_REQUEST, data: post.id });
   }, []);
 
+  // 게시글에서 수정 버튼을 눌렀을 때
+  const onUpdatePost = useCallback(() => {
+    setEditMode(true);
+  }, []);
+
+  // 수정 폼에서 수정 버튼을 눌렀을 때
+  const onChangePost = useCallback(
+    (text) => () => {
+      dispatch({
+        type: UPDATE_POST_REQUEST,
+        data: { PostId: post.id, content: text },
+      });
+      setEditMode(false);
+    },
+    []
+  );
+
+  const onCancelUpdate = useCallback(() => {
+    setEditMode(false);
+  }, []);
+
   return (
     <div style={{ marginBottom: 20 }}>
       <Card
@@ -83,7 +106,9 @@ const PostCard = ({ post }) => {
               <Button.Group>
                 {id && id === post.User.id ? (
                   <>
-                    <Button>수정</Button>
+                    {!post.RetweetId && (
+                      <Button onClick={onUpdatePost}>수정</Button>
+                    )}
                     <Button
                       type="danger"
                       loading={removePostLoading}
@@ -143,7 +168,14 @@ const PostCard = ({ post }) => {
                 </Link>
               }
               title={post.User.nickname}
-              description={<PostCardContent postData={post.content} />}
+              description={
+                <PostCardContent
+                  postData={post.content}
+                  editMode={editMode}
+                  onChangePost={onChangePost}
+                  onCancelUpdate={onCancelUpdate}
+                />
+              }
             />
           </>
         )}
