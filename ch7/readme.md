@@ -112,14 +112,48 @@ CORS 문제는 **백엔드** 서버에서 발생하는 문제
 
 ---
 
-## 게시글 수정하기
+## 게시글 수정하기 - 完
 
 리트윗한 게시글의 경우 수정할 수 없도록 한다.
 
 `{!post.RetweetId && <Button>수정</Button>}`
 
+---
 
+## 팔로잉한 게시글만 가져오기 - 完
 
+unrelated / 팔로잉하지 않은 게시글을 가져올 때는 자기 자신의 글을 제외하려면
+`followings.map((v) => v.id).concat(req.user.id)` 이런 식으로 `concat` 메서드를 사용
+
+---
+
+## 빠르게 어드민 페이지 만들기
+
+https://www.forestadmin.com/ - express sequelize 분석
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/d11e6fe4-7f3f-4d77-80ca-49a665f88c0c)
+
+데이터베이스가 로컬에서 실행 중인 경우 Ngrok과 같은 터널링 소프트웨어를 통해 데이터베이스를 인터넷으로 공유해야 한다.
+
+### ngrok
+
+1. https://ngrok.com/ (회원가입 및 ngrok 다운로드)
+
+2. 다운로드된 파일로 들어가서 https://dashboard.ngrok.com/get-started/your-authtoken의 command line에 적힌 부분 입력
+
+3. `ngrok tcp 3306`
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/2ded977a-0946-44ae-8164-687a2862bd94)
+
+설정을 마치면 DB와 연동된 관리자 페이지를 볼 수 있게 된다.
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/9101c6b4-a696-4dd2-9c60-c091adbd6bb3)
+
+dashboard도 확인 가능하다.
+
+![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/18ad5a66-65b6-4609-b993-2ac117b71cbe)
+
+실제 프로덕션에서 배포도 할 수 있음
 
 
 
