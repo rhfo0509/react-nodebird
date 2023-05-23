@@ -180,6 +180,25 @@ router.delete("/:postId", isLoggedIn, async (req, res, next) => {
   }
 });
 
+router.patch("/:postId", async (req, res, next) => {
+  try {
+    const post = await Post.findOne({
+      where: { id: Number(req.params.postId) },
+    });
+    if (!post) {
+      return res.status(403).send("존재하지 않는 게시글입니다.");
+    }
+    await Post.update(
+      { content: req.body.content },
+      { where: { id: post.id } }
+    );
+    res.status(200).json({ PostId: post.id, content: req.body.content });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
 const upload = multer({
   storage: multer.diskStorage({
     destination(req, file, done) {

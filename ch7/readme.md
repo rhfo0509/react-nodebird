@@ -110,6 +110,16 @@ CORS 문제는 **백엔드** 서버에서 발생하는 문제
 
 `Link` 컴포넌트의 prefetch를 `false`로 설정하면 더 이상 prefetch되지 않는다.
 
+---
+
+## 게시글 수정하기
+
+리트윗한 게시글의 경우 수정할 수 없도록 한다.
+
+`{!post.RetweetId && <Button>수정</Button>}`
+
+
+
 
 
 
