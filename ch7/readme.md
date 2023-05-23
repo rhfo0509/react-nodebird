@@ -4,7 +4,7 @@
 
 ### nginx
 
-**웹 서버**의 일종으로,
+**웹 서버**의 일종으로, 클라이언트의 요청을 받아 서버로 전달하는 **리버스 프록시**의 역할을 수행한다. 이 과정에서 **리다이렉팅 기능**, **정적 파일 제공**, **SSL/TLS 프로토콜을 통한 HTTPS 연결 설정 기능** 등을 제공한다. (SSR 및 SSG 기능을 제공하는 next 서버와 구분)
 
 ### 기존 방식 vs nginx가 내부에 추가된 방식
 
@@ -13,8 +13,6 @@
 * 기존 방식의 경우 443번 포트로 온 요청은 바로 next 서버로 보내고, 80번 포트로 온 요청은 프론트 서버에서 443번 포트로 리다이렉트 시켜서 next 서버로 보낸다.
 
 * nginx가 추가된 방식의 경우 80번 포트로 온 요청을 nginx 서버에서 내부적으로 443번 포트로 리다이렉트 시킨 후 next 서버로 보낸다는 점에서 기존 방식과 차이가 있다.
-
-* nginx는 클라이언트의 요청을 받아 서버로 전달하는 **리버스 프록시**의 역할을 수행하며, 이 과정에서 **리다이렉팅 기능**, **정적 파일 제공**, **SSL/TLS을 통한 HTTPS 설정 기능** 등을 제공한다. (SSR 및 SSG 기능을 제공하는 next 서버와 구분)
 
 ### nginx 설치
 
@@ -36,34 +34,36 @@ sudo systemctl start nginx  // nginx 실행
 sudo lsof -i tcp:80 // nginx가 보이면 정상
 ```
 
-#### Let's Encrypt
+### Let's Encrypt
 
-Let's Encrypt를 통해 무료로 SSL/TLS 인증서를 발급하고 관리할 수 있음 -> 유효기간 : 3개월 / 갱신 가능
+Let's Encrypt를 통해 HTTPS 연결을 위한 무료 SSL/TLS 인증서를 발급하고 관리할 수 있음 -> 유효기간 : 3개월 / 갱신 가능
 
-**공개키/비밀키** 방식을 사용하는데, 서버 측에서 제공하는 공개키로 사용자가 암호화하고 서버는 그 공개키에 대응하는 비밀키로 복호화한다. 비밀키는 서버만 가지고 있기 때문에 안전하고 신뢰성 있는 전송을 보장한다.
+**공개키/비밀키** 방식을 사용하는데, 서버 측에서 제공하는 공개키로 사용자가 암호화하고 서버는 그 공개키에 대응하는 비밀키로 복호화한다. 비밀키는 서버만 가지고 있기 때문에 안전하며, 데이터의 기밀성과 무결성을 보장한다.
+
+#### 설치
 
 ```
 sudo snap install certbot --classic
 sudo certbot --nginx
 ```
 
-자신의 이메일을 입력하고, 약관에 동의한 후 원하는 도메인을 입력하면 인증서가 발급된다.
+자신의 이메일을 입력하고, 약관에 동의한 후 원하는 도메인을 입력하면 인증서가 발급된다. (`fullchain` 및 `privkey` 경로를 잘 기억하자)
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/e520b430-9078-4214-8ad4-30786656a539)
 
-`fullchain` 및 `privkey` 경로를 잘 기억한 후 다시 `nginx.conf`을 열어보면
+다시 `nginx.conf`을 열어보면
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/6ae89518-b283-44b6-a170-a37f53cfd17d)
 
-이렇게 server 부분에 certbot이 작성한 코드가 추가되었음을 확인할 수 있다.
+이렇게 certbot이 작성한 코드가 추가되었음을 확인할 수 있다.
 * 443번 포트로 요청 -> 3000번 
 * 
 
 마지막으로 `package.json`을 열어서 start 부분의 포트 번호를 다시 3000으로 변경한다. (nginx가 80을 쓰기 때문에 next 서버의 포트 번호는 이제 3000)
 
-이제 `nodebird.site`로 접속하면 https가 정상적으로 적용이 된 걸 확인할 수 있다. (`www.nodebird.site`도 추가 설정 해보자)
+이제 `nodebird.site`로 접속하면 https가 정상적으로 적용이 된 걸 확인할 수 있다.
 
-`sudo certbot --nginx -d 도메인명 -d 서브도메인명`
+> CNAME으로 설정한 서브도메인에도 HTTPS를 설정하려면? -> `sudo certbot --nginx -d 도메인명 -d 서브도메인명`
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/b690e5ac-0fcb-438d-bbf9-0095a8ff323a)
 
