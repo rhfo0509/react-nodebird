@@ -76,7 +76,7 @@ sudo certbot --nginx
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/8169c817-fdbb-4ce4-8da3-218bec363e73)
 
-> 한 컴퓨터 내에서 프론트/백엔드 서버를 같이 사용하는 경우 \*(wildcard)를 통해서 인증서를 발급받아야 함 -> 이 때 http가 아닌 dns 방식으로 받아야 하며, Route53에서 txt 레코드 설정이 필요하다.
+> 한 컴퓨터 내에서 프론트/백엔드 서버가 같이 가동되는 경우 \*(wildcard)를 통해서 인증서를 발급받아야 함 -> 이 때 http가 아닌 dns 방식으로 받아야 하며, 추가적으로 Route53에서 txt 레코드 설정이 필요하다.
 
 여기서도 `app.js` 파일을 열어 **80**으로 설정된 포트 번호를 **3065**(express 서버)로 바꿔준다.
 
@@ -129,7 +129,9 @@ unrelated / 팔로잉하지 않은 게시글을 가져올 때는 자기 자신�
 
 ## 빠르게 어드민 페이지 만들기
 
-https://www.forestadmin.com/ - express sequelize 분석
+https://www.forestadmin.com/ 
+
+MySQL과 sequelize를 분석하여 CRUD, dashboard와 같은 유용한 기능들을 제공하는 어드민 페이징;디/
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/d11e6fe4-7f3f-4d77-80ca-49a665f88c0c)
 
@@ -139,9 +141,9 @@ https://www.forestadmin.com/ - express sequelize 분석
 
 1. https://ngrok.com/ (회원가입 및 ngrok 다운로드)
 
-2. 다운로드된 파일로 들어가서 https://dashboard.ngrok.com/get-started/your-authtoken의 command line에 적힌 부분 입력
+2. 다운로드된 파일로 들어가서 https://dashboard.ngrok.com/get-started/your-authtoken -> command line에 적힌 부분 입력
 
-3. `ngrok tcp 3306`
+3. `ngrok tcp 3306` 입력
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/2ded977a-0946-44ae-8164-687a2862bd94)
 
@@ -149,11 +151,9 @@ https://www.forestadmin.com/ - express sequelize 분석
 
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/9101c6b4-a696-4dd2-9c60-c091adbd6bb3)
 
-dashboard도 확인 가능하다.
-
 ![image](https://github.com/rhfo0509/react-nodebird/assets/85874042/18ad5a66-65b6-4609-b993-2ac117b71cbe)
 
-실제 프로덕션에서 배포도 할 수 있음
+> 실제 프로덕션 서버에 어드민 페이지 배포도 가능하다.
 
 
 

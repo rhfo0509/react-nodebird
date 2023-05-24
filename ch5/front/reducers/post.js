@@ -265,7 +265,6 @@ const reducer = (state = initialState, action) => {
       case UPDATE_POST_SUCCESS:
         draft.updatePostLoading = false;
         draft.updatePostDone = true;
-        // 게시글 ID가 똑같은 게시글을 mainPosts에서 찾아서 content를 변경
         const post = draft.mainPosts.find((v) => v.id === action.data.PostId);
         post.content = action.data.content;
         break;

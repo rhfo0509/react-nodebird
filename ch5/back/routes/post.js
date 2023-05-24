@@ -188,10 +188,12 @@ router.patch("/:postId", async (req, res, next) => {
     if (!post) {
       return res.status(403).send("존재하지 않는 게시글입니다.");
     }
+
     await Post.update(
       { content: req.body.content },
       { where: { id: post.id } }
     );
+    const updatedPost = await Post.findByPk(post.id);
     
     const hashtags = req.body.content.match(/#[^\s]+/g);
     if (hashtags) {
@@ -202,7 +204,7 @@ router.patch("/:postId", async (req, res, next) => {
           })
         )
       );
-      await post.addHashtags(result.map((v) => v[0]));
+      await updatedPost.setHashtags(result.map((v) => v[0]));
     }
     res.status(200).json({ PostId: post.id, content: req.body.content });
   } catch (error) {

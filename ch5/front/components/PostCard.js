@@ -64,7 +64,7 @@ const PostCard = ({ post }) => {
   }, []);
 
   // 게시글에서 수정 버튼을 눌렀을 때
-  const onUpdatePost = useCallback(() => {
+  const onClickUpdate = useCallback(() => {
     setEditMode(true);
   }, []);
 
@@ -80,6 +80,7 @@ const PostCard = ({ post }) => {
     []
   );
 
+  // 수정 폼에서 취소 버튼을 눌렀을 때
   const onCancelUpdate = useCallback(() => {
     setEditMode(false);
   }, []);
@@ -107,7 +108,7 @@ const PostCard = ({ post }) => {
                 {id && id === post.User.id ? (
                   <>
                     {!post.RetweetId && (
-                      <Button onClick={onUpdatePost}>수정</Button>
+                      <Button onClick={onClickUpdate}>수정</Button>
                     )}
                     <Button
                       type="danger"

@@ -270,7 +270,6 @@ function* addComment(action) {
 }
 
 function updatePostAPI(data) {
-  console.log(data);
   return axios.patch(`/post/${data.PostId}`, data);
 }
 

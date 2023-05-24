@@ -11,14 +11,11 @@ const PostCardContent = ({
   onCancelUpdate,
 }) => {
   const [editText, onChangeEditText, setEditText] = useInput(postData);
-  // const onClickEdit = useCallback(() => {
-  //   setEditMode(false);
-  //   onChangePost(editText);
-  // }, []);
   const onClickCancel = useCallback(() => {
     setEditText(postData);
     onCancelUpdate();
   }, []);
+
   return editMode ? (
     <>
       <Input.TextArea value={editText} onChange={onChangeEditText} />

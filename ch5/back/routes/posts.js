@@ -87,8 +87,14 @@ router.get("/related", async (req, res, next) => {
 
 router.get("/unrelated", async (req, res, next) => {
   try {
-    const me = await User.findByPk(req.user.id);
-    const followings = await me.getFollowings();
+    // const me = await User.findByPk(req.user.id);
+    // const followings = await me.getFollowings();
+    const me = await User.findOne({
+      where: {
+        id: req.user.id,
+      },
+      include: [{ model: User, as: "Followings", attributes: ["id"] }],
+    });
 
     const posts = await Post.findAll({
       order: [
@@ -101,7 +107,7 @@ router.get("/unrelated", async (req, res, next) => {
           attributes: ["id", "nickname"],
           where: {
             id: {
-              [Op.notIn]: followings.map((v) => v.id).concat(req.user.id),
+              [Op.notIn]: me.Followings.map((v) => v.id).concat(req.user.id),
             },
           },
         },
